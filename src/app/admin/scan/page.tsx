@@ -168,6 +168,16 @@ export default function ScannerPage() {
         }
     }, [handleScan]);
 
+    const resetScanner = useCallback(async () => {
+        await stopCamera();
+        setState("scanning");
+        setScanResult(null);
+        setCurrentToken(null);
+        setCheckInTime(null);
+        isProcessing.current = false;
+        await startCamera();
+    }, [startCamera, stopCamera]);
+
     useEffect(() => {
         if (state === "scanning" && !cameraError) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -177,19 +187,19 @@ export default function ScannerPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state]);
 
+    // Auto-resume scanner 2.5 seconds after successful check-in
+    useEffect(() => {
+        if (state === "checked_in_success") {
+            const timer = setTimeout(() => {
+                resetScanner();
+            }, 2200);
+            return () => clearTimeout(timer);
+        }
+    }, [state, resetScanner]);
+
     const handleConfirmCheckIn = async () => {
         if (!currentToken) return;
         await performCheckIn(currentToken, scanResult || undefined);
-    };
-
-    const resetScanner = async () => {
-        await stopCamera();
-        setState("scanning");
-        setScanResult(null);
-        setCurrentToken(null);
-        setCheckInTime(null);
-        isProcessing.current = false;
-        await startCamera();
     };
 
     return (

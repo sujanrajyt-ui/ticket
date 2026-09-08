@@ -107,6 +107,25 @@ export default function AttendeeDetailPage() {
         ? format(new Date(attendee.checked_in_at), "dd MMM yyyy, h:mm a")
         : null;
 
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    const handleDelete = async () => {
+        if (!attendee) return;
+        setActionLoading(true);
+        try {
+            const res = await fetch(`/api/attendees/${attendee.registration_id}`, {
+                method: "DELETE",
+            });
+            if (res.ok) {
+                setActionMsg("✓ Registration deleted permanently.");
+                setShowDeleteModal(false);
+                setTimeout(() => router.push("/admin"), 1000);
+            } else {
+                setActionMsg("Failed to delete attendee.");
+            }
+        } catch { setActionMsg("Network error during deletion."); } finally { setActionLoading(false); }
+    };
+
     return (
         <div className="min-h-screen bg-[#0c0516] text-white">
             <header className="border-b border-[#241047] bg-[#120721] sticky top-0 z-20 shadow-md sticky-safe">
@@ -170,19 +189,24 @@ export default function AttendeeDetailPage() {
 
                 {/* Actions — admin only */}
                 {userRole === "admin" && (
-                    <div className="flex gap-3 pt-2">
-                        {!attendee.checked_in && (
-                            <Button onClick={() => setShowCheckInModal(true)} fullWidth variant="primary" size="lg">
-                                <UserCheck className="w-4 h-4" />
-                                Manual Check-In
-                            </Button>
-                        )}
-                        {attendee.checked_in && (
-                            <Button onClick={() => setShowUndoModal(true)} fullWidth variant="secondary" size="lg">
-                                <RotateCcw className="w-4 h-4" />
-                                Undo Check-In
-                            </Button>
-                        )}
+                    <div className="flex flex-col gap-3 pt-2">
+                        <div className="flex gap-3">
+                            {!attendee.checked_in && (
+                                <Button onClick={() => setShowCheckInModal(true)} fullWidth variant="primary" size="lg">
+                                    <UserCheck className="w-4 h-4" />
+                                    Manual Check-In
+                                </Button>
+                            )}
+                            {attendee.checked_in && (
+                                <Button onClick={() => setShowUndoModal(true)} fullWidth variant="secondary" size="lg">
+                                    <RotateCcw className="w-4 h-4" />
+                                    Undo Check-In
+                                </Button>
+                            )}
+                        </div>
+                        <Button onClick={() => setShowDeleteModal(true)} fullWidth variant="danger" size="lg">
+                            Delete Registration
+                        </Button>
                     </div>
                 )}
             </main>
@@ -204,6 +228,16 @@ export default function AttendeeDetailPage() {
                 <div className="flex gap-3">
                     <Button onClick={() => setShowUndoModal(false)} variant="secondary" fullWidth>Cancel</Button>
                     <Button onClick={handleUndoCheckIn} variant="danger" fullWidth loading={actionLoading}>Undo Check-In</Button>
+                </div>
+            </Modal>
+
+            {/* Delete entry confirm */}
+            <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Registration Permanently?">
+                <p className="text-slate-300 text-sm mb-1">Are you sure you want to delete <span className="font-bold text-white">{fullName}</span>?</p>
+                <p className="text-red-400 text-xs mb-5 font-semibold">⚠️ This action cannot be undone. The ticket pass will become invalid.</p>
+                <div className="flex gap-3">
+                    <Button onClick={() => setShowDeleteModal(false)} variant="secondary" fullWidth>Cancel</Button>
+                    <Button onClick={handleDelete} variant="danger" fullWidth loading={actionLoading}>Permanently Delete</Button>
                 </div>
             </Modal>
         </div>

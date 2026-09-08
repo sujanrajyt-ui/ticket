@@ -166,9 +166,26 @@ export async function registerAttendee(data: {
     }
 }
 
-export async function lookupAttendee(token: string): Promise<Attendee | null> {
+export async function lookupAttendee(rawQuery: string): Promise<Attendee | null> {
+    if (!rawQuery) return null;
+
+    // Extract token if rawQuery is a full URL path (e.g., https://site.com/success/TOKEN)
+    let search = rawQuery.trim();
+    try {
+        if (search.includes("/")) {
+            const parts = search.split("/").filter(Boolean);
+            search = parts[parts.length - 1] || search;
+        }
+    } catch { /* ignore */ }
+
+    const cleanSearch = search.toLowerCase();
+
     const mockMatch = mockAttendees.find(
-        (a) => a.qr_token === token || a.registration_id === token
+        (a) =>
+            a.qr_token.toLowerCase() === cleanSearch ||
+            a.registration_id.toLowerCase() === cleanSearch ||
+            (a.usn && a.usn.toLowerCase() === cleanSearch) ||
+            a.id.toLowerCase() === cleanSearch
     );
     if (mockMatch) return mockMatch;
 
@@ -179,7 +196,7 @@ export async function lookupAttendee(token: string): Promise<Attendee | null> {
         const { data } = await supabase
             .from("attendees")
             .select("*")
-            .or(`qr_token.eq.${token},registration_id.eq.${token}`)
+            .or(`qr_token.eq.${search},registration_id.eq.${search},usn.ilike.${search},id.eq.${search}`)
             .maybeSingle();
 
         return (data as unknown as Attendee) || null;
@@ -188,9 +205,57 @@ export async function lookupAttendee(token: string): Promise<Attendee | null> {
     }
 }
 
-export async function checkInAttendee(token: string): Promise<{ success: boolean; message: string; attendee?: Attendee }> {
+export async function deleteAttendee(idOrToken: string): Promise<{ success: boolean; error?: string }> {
+    if (!idOrToken) return { success: false, error: "ID or Token required" };
+
+    const clean = idOrToken.trim();
+
+    // Delete from mock store if present
+    const mockIdx = mockAttendees.findIndex(
+        (a) => a.id === clean || a.qr_token === clean || a.registration_id === clean
+    );
+    if (mockIdx !== -1) {
+        mockAttendees.splice(mockIdx, 1);
+    }
+
+    if (isMockMode()) return { success: true };
+
+    try {
+        const supabase = await createAdminClient();
+        const { error } = await supabase
+            .from("attendees")
+            .delete()
+            .or(`id.eq.${clean},qr_token.eq.${clean},registration_id.eq.${clean}`);
+
+        if (error) {
+            console.error("Delete attendee DB error:", error);
+            return { success: false, error: error.message };
+        }
+
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : "Delete failed" };
+    }
+}
+
+export async function checkInAttendee(rawToken: string): Promise<{ success: boolean; message: string; attendee?: Attendee }> {
+    if (!rawToken) return { success: false, message: "INVALID_TOKEN" };
+
+    let token = rawToken.trim();
+    try {
+        if (token.includes("/")) {
+            const parts = token.split("/").filter(Boolean);
+            token = parts[parts.length - 1] || token;
+        }
+    } catch { /* ignore */ }
+
+    const cleanToken = token.toLowerCase();
+
     const mockMatch = mockAttendees.find(
-        (a) => a.qr_token === token || a.registration_id === token
+        (a) =>
+            a.qr_token.toLowerCase() === cleanToken ||
+            a.registration_id.toLowerCase() === cleanToken ||
+            (a.usn && a.usn.toLowerCase() === cleanToken)
     );
 
     if (mockMatch || isMockMode()) {
@@ -204,21 +269,61 @@ export async function checkInAttendee(token: string): Promise<{ success: boolean
 
     try {
         const supabase = await createAdminClient();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data, error } = await (supabase as any).rpc("check_in_attendee", { p_token: token });
 
-        if (error) {
-            console.error("Check-in RPC error:", error);
-            return { success: false, message: "RPC_ERROR" };
+        // 1. Try Supabase RPC check_in_attendee first
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data, error } = await (supabase as any).rpc("check_in_attendee", { p_token: token });
+
+            if (!error && data) {
+                const res = data as unknown as { success: boolean; message: string; attendee_data?: Attendee };
+                if (res.success || res.message === "ALREADY_CHECKED_IN") {
+                    return {
+                        success: res.success || false,
+                        message: res.message || "SUCCESS",
+                        attendee: res.attendee_data,
+                    };
+                }
+            }
+        } catch { /* proceed to direct fallback */ }
+
+        // 2. Direct Supabase Query Fallback (Fail-proof!)
+        const { data: rawAttendee } = await supabase
+            .from("attendees")
+            .select("*")
+            .or(`qr_token.eq.${token},registration_id.eq.${token},usn.ilike.${token}`)
+            .maybeSingle();
+
+        const attendee = rawAttendee as unknown as Attendee | null;
+
+        if (!attendee) {
+            return { success: false, message: "INVALID_TOKEN" };
         }
 
-        const res = data as unknown as { success: boolean; message: string; attendee_data?: Attendee };
+        if (attendee.checked_in) {
+            return { success: false, message: "ALREADY_CHECKED_IN", attendee };
+        }
+
+        const now = new Date().toISOString();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: updated, error: updateError } = await (supabase.from("attendees") as any)
+            .update({ checked_in: true, checked_in_at: now })
+            .eq("id", attendee.id)
+            .select()
+            .single();
+
+        if (updateError || !updated) {
+            console.error("Direct check-in update error:", updateError);
+            return { success: false, message: "UPDATE_FAILED" };
+        }
+
         return {
-            success: res?.success || false,
-            message: res?.message || "ERROR",
-            attendee: res?.attendee_data,
+            success: true,
+            message: "SUCCESS",
+            attendee: updated as unknown as Attendee,
         };
-    } catch {
+    } catch (err) {
+        console.error("Check-in exception:", err);
         return { success: false, message: "NETWORK_ERROR" };
     }
 }
