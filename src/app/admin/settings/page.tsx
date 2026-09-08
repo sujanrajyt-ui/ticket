@@ -74,7 +74,7 @@ export default function AdminSettingsPage() {
 
     return (
         <div className="min-h-screen bg-[#0c0516] text-white">
-            <header className="border-b border-[#241047] bg-[#120721] sticky top-0 z-20 shadow-md">
+            <header className="border-b border-[#241047] bg-[#120721] sticky top-0 z-20 shadow-md sticky-safe">
                 <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                         <button
@@ -128,7 +128,7 @@ export default function AdminSettingsPage() {
                                             value={values[field]}
                                             onChange={(e) => updateField(field, e.target.value)}
                                             rows={4}
-                                            className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-500 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                            className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-4 py-3 text-base text-white placeholder:text-slate-500 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                                         />
                                     </div>
                                 ) : (

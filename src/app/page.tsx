@@ -92,7 +92,7 @@ export default function RegistrationPage() {
   return (
     <div className="min-h-screen bg-[#0c0516] text-slate-100 selection:bg-amber-500 selection:text-black">
       {/* Header / Navbar */}
-      <header className="border-b border-[#241047] bg-[#0c0516]/90 backdrop-blur-md sticky top-0 z-30">
+      <header className="border-b border-[#241047] bg-[#0c0516]/90 backdrop-blur-md sticky top-0 z-30 sticky-safe">
         <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-extrabold shadow-sm">
@@ -260,6 +260,7 @@ export default function RegistrationPage() {
                   placeholder="e.g. Rahul"
                   error={errors.first_name?.message}
                   required
+                  autoComplete="given-name"
                   {...register("first_name")}
                 />
                 <Input
@@ -267,18 +268,21 @@ export default function RegistrationPage() {
                   placeholder="e.g. Sharma"
                   error={errors.last_name?.message}
                   required
+                  autoComplete="family-name"
                   {...register("last_name")}
                 />
               </div>
 
-              <Input
-                label="USN (University Seat No)"
-                placeholder="e.g. 4NM22CS001"
-                hint={EVENT_CONFIG.usnHelperText}
-                error={errors.usn?.message}
-                required
-                {...register("usn")}
-              />
+<Input
+                  label="USN (University Seat No)"
+                  placeholder="e.g. 4NM22CS001"
+                  hint={EVENT_CONFIG.usnHelperText}
+                  error={errors.usn?.message}
+                  required
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  {...register("usn")}
+                />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -287,7 +291,7 @@ export default function RegistrationPage() {
                   </label>
                   <select
                     {...register("branch")}
-                    className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-base text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   >
                     {EVENT_CONFIG.branches.map((b) => (
                       <option key={b} value={b} className="bg-[#120721] text-white">{b}</option>
@@ -301,7 +305,7 @@ export default function RegistrationPage() {
                   </label>
                   <select
                     {...register("year")}
-                    className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-base text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   >
                     {EVENT_CONFIG.years.map((y) => (
                       <option key={y} value={y} className="bg-[#120721] text-white">{y}</option>
@@ -316,6 +320,7 @@ export default function RegistrationPage() {
                 placeholder="rahul@nitte.edu.in"
                 error={errors.email?.message}
                 required
+                autoComplete="email"
                 {...register("email")}
               />
 
@@ -325,6 +330,9 @@ export default function RegistrationPage() {
                 placeholder="9876543210"
                 error={errors.phone?.message}
                 required
+                inputMode="numeric"
+                autoComplete="tel"
+                maxLength={10}
                 {...register("phone")}
               />
 

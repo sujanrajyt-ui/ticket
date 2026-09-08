@@ -15,6 +15,14 @@
     -webkit-font-smoothing: antialiased;
     background-color: var(--bg-deep);
     color: #f8fafc;
+    overflow-x: clip;
+  }
+
+  /* Keep input text ≥16px so iOS Safari doesn't auto-zoom on focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 
   ::selection {
@@ -41,6 +49,11 @@
 @layer utilities {
   .text-gold {
     color: #eab308;
+  }
+
+  /* Keeps sticky headers below the notch/safe area on devices with display cutouts */
+  .sticky-safe {
+    top: env(safe-area-inset-top);
   }
 
   .text-gold-gradient {

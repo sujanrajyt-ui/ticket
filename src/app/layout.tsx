@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { EVENT_CONFIG } from "@/config/event";
@@ -9,6 +9,19 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 export const metadata: Metadata = {
   title: `${EVENT_CONFIG.name} — Registration`,
   description: EVENT_CONFIG.description,
+  formatDetection: { telephone: false },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: EVENT_CONFIG.name,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0c0516",
 };
 
 export default function RootLayout({
