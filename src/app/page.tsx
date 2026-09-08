@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
-import { CalendarDays, MapPin, Clock, Sparkles, ChevronRight } from "lucide-react";
+import { CalendarDays, MapPin, Clock, Sparkles, ChevronRight, QrCode, ShieldCheck, Zap } from "lucide-react";
 import { EVENT_CONFIG } from "@/config/event";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -57,7 +57,6 @@ export default function RegistrationPage() {
         return;
       }
 
-      // Save attendee info in sessionStorage for the success page
       sessionStorage.setItem(`reg_${json.qr_token}`, JSON.stringify(json.attendee));
       router.push(`/success/${json.qr_token}`);
     } catch {
@@ -68,57 +67,63 @@ export default function RegistrationPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-950 relative overflow-x-hidden">
-      {/* Background gradient orbs */}
+    <main className="min-h-screen bg-gray-950 text-white relative overflow-x-hidden">
+      {/* Dynamic ambient lights */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-violet-900/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-indigo-900/20 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-violet-900/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-indigo-900/20 rounded-full blur-[100px]" />
       </div>
 
       <div className="relative z-10 max-w-xl mx-auto px-4 py-8 sm:py-12">
-        {/* ── Event Banner ── */}
-        <div className="rounded-3xl overflow-hidden mb-8 border border-white/10 shadow-2xl">
-          {/* Gradient header */}
-          <div className="bg-gradient-to-br from-violet-950 via-purple-900 to-indigo-900 px-6 pt-8 pb-6 text-center relative">
-            {/* Decorative dots */}
-            <div className="absolute inset-0 opacity-30"
+        {/* Top QR-Sage Pill */}
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex items-center gap-2 bg-violet-950/80 border border-violet-500/30 text-violet-300 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase shadow-lg shadow-violet-950/50">
+            <span className="w-2 h-2 rounded-full bg-violet-400 animate-ping" />
+            <QrCode className="w-3.5 h-3.5 text-violet-400" />
+            QR SAGE TICKET PASS REGISTRATION
+          </div>
+        </div>
+
+        {/* ── Event Hero Banner Card ── */}
+        <div className="rounded-3xl overflow-hidden mb-8 border border-white/10 shadow-2xl bg-gray-900">
+          <div className="bg-gradient-to-br from-violet-950 via-purple-900 to-indigo-950 px-6 pt-8 pb-6 text-center relative border-b border-white/10">
+            <div className="absolute inset-0 opacity-20"
               style={{
-                backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)",
+                backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.2) 1px, transparent 1px)",
                 backgroundSize: "24px 24px"
               }}
             />
             <div className="relative z-10">
-              {/* Event logo/icon */}
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-sm">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md shadow-xl">
                 <Sparkles className="w-8 h-8 text-violet-300" />
               </div>
-              <p className="text-violet-300 text-xs font-semibold tracking-[0.2em] uppercase mb-2">
+              <p className="text-violet-300 text-xs font-bold tracking-[0.25em] uppercase mb-2">
                 {EVENT_CONFIG.collegeName}
               </p>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 leading-tight">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-2 leading-tight tracking-tight">
                 {EVENT_CONFIG.name}
               </h1>
-              <p className="text-lg text-violet-200 font-medium mb-4">
+              <p className="text-base text-violet-200 font-medium mb-3">
                 {EVENT_CONFIG.tagline}
               </p>
-              <p className="text-sm text-white/70 max-w-sm mx-auto leading-relaxed">
+              <p className="text-xs text-white/70 max-w-sm mx-auto leading-relaxed">
                 {EVENT_CONFIG.description}
               </p>
             </div>
           </div>
 
           {/* Event details strip */}
-          <div className="bg-gray-900/80 border-t border-white/5 px-6 py-4">
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-400">
-              <span className="flex items-center gap-1.5">
+          <div className="bg-gray-900/90 px-6 py-4">
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-300">
+              <span className="flex items-center gap-1.5 font-medium">
                 <CalendarDays className="w-4 h-4 text-violet-400" />
                 {EVENT_CONFIG.date}
               </span>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 font-medium">
                 <Clock className="w-4 h-4 text-violet-400" />
                 {EVENT_CONFIG.time}
               </span>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 font-medium">
                 <MapPin className="w-4 h-4 text-violet-400" />
                 {EVENT_CONFIG.venue}
               </span>
@@ -126,21 +131,45 @@ export default function RegistrationPage() {
           </div>
         </div>
 
-        {/* ── Registration Card ── */}
-        <div className="bg-gray-900 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl">
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-white">Event Registration</h2>
-            <p className="text-sm text-gray-400 mt-1">
-              Register for your free entry by providing your details below.
-            </p>
+        {/* Feature Highlights Row */}
+        <div className="grid grid-cols-3 gap-2 mb-6 text-center">
+          <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-3">
+            <Zap className="w-4 h-4 text-violet-400 mx-auto mb-1" />
+            <p className="text-[11px] font-semibold text-white">Instant QR Pass</p>
+            <p className="text-[9px] text-gray-500">Instant download</p>
+          </div>
+          <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-3">
+            <ShieldCheck className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+            <p className="text-[11px] font-semibold text-white">Contactless</p>
+            <p className="text-[9px] text-gray-500">Fast check-in</p>
+          </div>
+          <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-3">
+            <QrCode className="w-4 h-4 text-indigo-400 mx-auto mb-1" />
+            <p className="text-[11px] font-semibold text-white">Digital Ticket</p>
+            <p className="text-[9px] text-gray-500">Phone entry</p>
+          </div>
+        </div>
+
+        {/* ── Registration Form Card ── */}
+        <div className="bg-gray-900 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
+          <div className="mb-6 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-extrabold text-white tracking-tight">Claim Your Free Entry Ticket</h2>
+              <p className="text-xs text-gray-400 mt-1">
+                Fill in your details to generate your unique entry QR pass.
+              </p>
+            </div>
+            <span className="bg-emerald-950/80 border border-emerald-800 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+              FREE ENTRY
+            </span>
           </div>
 
           {serverError && (
-            <div className="mb-5 flex gap-3 items-start bg-red-950/50 border border-red-800 rounded-xl p-4">
+            <div className="mb-5 flex gap-3 items-start bg-red-950/50 border border-red-800/80 rounded-2xl p-4">
               <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
-              <p className="text-sm text-red-300">{serverError}</p>
+              <p className="text-xs text-red-300">{serverError}</p>
             </div>
           )}
 
@@ -172,11 +201,11 @@ export default function RegistrationPage() {
             />
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-gray-200">
+              <label className="text-xs font-semibold uppercase tracking-wider text-gray-300">
                 Phone Number <span className="text-violet-400">*</span>
               </label>
               <div className="flex gap-2">
-                <div className="flex items-center justify-center bg-white/5 border border-white/10 rounded-xl px-3.5 py-3 text-sm text-gray-300 font-medium min-w-[72px] flex-shrink-0">
+                <div className="flex items-center justify-center bg-white/5 border border-white/10 rounded-xl px-3.5 py-3 text-xs text-gray-300 font-semibold min-w-[72px] flex-shrink-0">
                   🇮🇳 +91
                 </div>
                 <input
@@ -199,7 +228,7 @@ export default function RegistrationPage() {
             </div>
 
             <Input
-              label="USN"
+              label="USN (University Seat Number)"
               required
               placeholder="1RV22CS001"
               helperText={EVENT_CONFIG.usnHelperText}
@@ -212,15 +241,15 @@ export default function RegistrationPage() {
               fullWidth
               size="lg"
               loading={isSubmitting}
-              className="mt-2"
+              className="mt-2 shadow-lg shadow-violet-950/50"
             >
-              {isSubmitting ? "Registering..." : "Register"}
+              {isSubmitting ? "Generating QR Pass..." : "Get My Ticket Pass"}
               {!isSubmitting && <ChevronRight className="w-4 h-4" />}
             </Button>
           </form>
 
-          <p className="text-xs text-gray-500 text-center mt-4">
-            Free entry · {EVENT_CONFIG.department}
+          <p className="text-[11px] text-gray-500 text-center mt-5">
+            Free Pass · Organized by {EVENT_CONFIG.department}
           </p>
         </div>
 
