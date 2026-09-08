@@ -188,7 +188,7 @@ export default function AdminDashboard() {
                                             className="hover:bg-[#1f0d3d] cursor-pointer transition-colors"
                                         >
                                             <td className="px-4 py-3 font-semibold text-white">
-                                                {a.first_name} {a.last_name}
+                                                {(a.first_name + " " + a.last_name).trim()}
                                                 <p className="text-xs text-slate-400 font-normal">{a.email}</p>
                                             </td>
                                             <td className="px-4 py-3 text-amber-400 font-mono text-xs font-bold hidden sm:table-cell">{a.usn}</td>

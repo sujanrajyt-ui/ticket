@@ -1,27 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { registerAttendee } from "@/lib/db";
 import { generateQRToken, generateRegistrationId } from "@/lib/qr";
-import { EVENT_CONFIG } from "@/config/event";
+import { compileUSNRegex } from "@/config/event";
+import { getEventSettingsServer } from "@/lib/event-config";
 import { z } from "zod";
-
-const registrationSchema = z.object({
-    first_name: z.string().min(1, "First name is required").max(50),
-    last_name: z.string().min(1, "Last name is required").max(50),
-    email: z.string().email("Invalid email address"),
-    phone: z
-        .string()
-        .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
-    usn: EVENT_CONFIG.usnRegex
-        ? z
-            .string()
-            .regex(
-                EVENT_CONFIG.usnRegex,
-                "Invalid USN format. Example: 4NM22CS001"
-            )
-        : z.string().min(1, "USN is required"),
-    branch: z.string().optional(),
-    year: z.string().optional(),
-});
 
 // Simple in-memory rate limiter per IP
 const ipRegistry = new Map<string, { count: number; resetAt: number }>();
@@ -40,6 +22,32 @@ function checkRateLimit(ip: string): boolean {
     return true;
 }
 
+function buildRegistrationSchema(settings: Awaited<ReturnType<typeof getEventSettingsServer>>) {
+    const usnRegex = compileUSNRegex(settings.usnRegex);
+    let usnBase = z.string().max(50);
+    if (settings.usnRequired && !usnRegex) {
+        usnBase = z.string().min(1, "USN / ID is required").max(50);
+    }
+    if (usnRegex) {
+        usnBase = z.string().regex(usnRegex, "Invalid USN / ID format").max(50);
+    }
+    const usn = settings.usnRequired ? usnBase : usnBase.optional().or(z.literal(""));
+
+    return z.object({
+        first_name: z.string().min(1, "First name is required").max(50),
+        last_name: settings.lastNameRequired
+            ? z.string().min(1, "Last name is required").max(50)
+            : z.string().max(50).optional(),
+        email: z.string().email("Invalid email address"),
+        phone: z
+            .string()
+            .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
+        usn,
+        branch: z.string().optional(),
+        year: z.string().optional(),
+    });
+}
+
 export async function POST(request: NextRequest) {
     try {
         const ip =
@@ -51,6 +59,9 @@ export async function POST(request: NextRequest) {
                 { status: 429 }
             );
         }
+
+        const settings = await getEventSettingsServer();
+        const registrationSchema = buildRegistrationSchema(settings);
 
         const body = await request.json();
         const parsed = registrationSchema.safeParse(body);
@@ -69,10 +80,10 @@ export async function POST(request: NextRequest) {
 
         const result = await registerAttendee({
             first_name: data.first_name.trim(),
-            last_name: data.last_name.trim(),
+            last_name: (data.last_name || "").trim(),
             email: data.email.toLowerCase().trim(),
             phone: data.phone.trim(),
-            usn: data.usn.toUpperCase().trim(),
+            usn: (data.usn || "").toUpperCase().trim(),
             branch: data.branch || "Computer Science & Engg (CSE)",
             year: data.year || "3rd Year",
             qr_token: qrToken,

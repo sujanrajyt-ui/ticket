@@ -38,19 +38,63 @@ export interface EventSettings {
   collegeName: string;
   department: string;
   contactEmail: string;
+  usnLabel: string;
+  usnHint: string;
+  usnRegex: string;
+  usnRequired: boolean;
+  lastNameRequired: boolean;
 }
 
-export const EDITABLE_EVENT_FIELDS = [
-  "name",
-  "tagline",
-  "description",
-  "date",
-  "time",
-  "venue",
-  "collegeName",
-  "department",
-  "contactEmail",
-] as const;
+export interface EventSettingField {
+  key: keyof EventSettings;
+  label: string;
+  type: "text" | "textarea" | "boolean";
+  hint?: string;
+}
+
+export const EVENT_SETTING_FIELDS: EventSettingField[] = [
+  { key: "name", label: "Event Name", type: "text" },
+  { key: "tagline", label: "Tagline", type: "text" },
+  { key: "description", label: "Description", type: "textarea" },
+  { key: "date", label: "Event Date", type: "text" },
+  { key: "time", label: "Event Time", type: "text" },
+  { key: "venue", label: "Venue", type: "text" },
+  { key: "collegeName", label: "College Name", type: "text" },
+  { key: "department", label: "Department / Fest", type: "text" },
+  { key: "contactEmail", label: "Contact Email", type: "text" },
+  {
+    key: "usnLabel",
+    label: "USN Field Label",
+    type: "text",
+    hint: "Shown above the ID input on the registration form.",
+  },
+  {
+    key: "usnHint",
+    label: "USN Helper Text",
+    type: "text",
+    hint: "The hint shown below the ID input.",
+  },
+  {
+    key: "usnRegex",
+    label: "USN Format Pattern",
+    type: "text",
+    hint: "Leave empty to accept any format. JavaScript Regex, e.g. ^[1-4][A-Z]{2}\\d{2}[A-Z]{2}\\d{3}$",
+  },
+  {
+    key: "usnRequired",
+    label: "USN / ID Field Required",
+    type: "boolean",
+    hint: "Turn off to let attendees skip the USN / ID field.",
+  },
+  {
+    key: "lastNameRequired",
+    label: "Last Name Required",
+    type: "boolean",
+    hint: "Turn off to make last name optional on registration.",
+  },
+];
+
+export const EDITABLE_EVENT_FIELDS = EVENT_SETTING_FIELDS.map((f) => f.key);
 
 export const DEFAULT_EVENT_SETTINGS: EventSettings = {
   name: EVENT_CONFIG.name,
@@ -62,8 +106,22 @@ export const DEFAULT_EVENT_SETTINGS: EventSettings = {
   collegeName: EVENT_CONFIG.collegeName,
   department: EVENT_CONFIG.department,
   contactEmail: EVENT_CONFIG.contactEmail,
+  usnLabel: "USN / Student ID",
+  usnHint: "Enter your USN (any format is accepted)",
+  usnRegex: "",
+  usnRequired: true,
+  lastNameRequired: false,
 };
 
 export function mergeEventSettings(stored?: Partial<EventSettings> | null): EventSettings {
   return { ...DEFAULT_EVENT_SETTINGS, ...(stored || {}) };
+}
+
+export function compileUSNRegex(pattern?: string): RegExp | null {
+  if (!pattern || !pattern.trim()) return null;
+  try {
+    return new RegExp(pattern.trim());
+  } catch {
+    return null;
+  }
 }

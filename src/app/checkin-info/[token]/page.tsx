@@ -36,7 +36,7 @@ export default async function CheckInInfoPage({
                 </div>
                 <p className="text-xs text-gray-500 uppercase tracking-widest">{settings.name}</p>
                 <h1 className="text-xl font-bold text-white">
-                    {attendee.first_name} {attendee.last_name}
+                    {`${attendee.first_name} ${attendee.last_name}`.trim()}
                 </h1>
                 <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border ${attendee.checked_in
                     ? "bg-emerald-950 border-emerald-800 text-emerald-400"

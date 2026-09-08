@@ -102,7 +102,7 @@ export default function AttendeeDetailPage() {
         </div>
     );
 
-    const fullName = `${attendee.first_name} ${attendee.last_name}`;
+    const fullName = `${attendee.first_name} ${attendee.last_name}`.trim();
     const createdAt = format(new Date(attendee.created_at), "dd MMM yyyy, h:mm a");
     const checkedAt = attendee.checked_in_at
         ? format(new Date(attendee.checked_in_at), "dd MMM yyyy, h:mm a")

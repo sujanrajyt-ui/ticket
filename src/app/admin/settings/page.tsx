@@ -3,21 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Settings, Loader2 } from "lucide-react";
-import { EDITABLE_EVENT_FIELDS, EventSettings } from "@/config/event";
+import { EVENT_SETTING_FIELDS, EventSettings } from "@/config/event";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-
-const FIELD_LABELS: Record<(typeof EDITABLE_EVENT_FIELDS)[number], string> = {
-    name: "Event Name",
-    tagline: "Tagline",
-    description: "Description",
-    date: "Event Date",
-    time: "Event Time",
-    venue: "Venue",
-    collegeName: "College Name",
-    department: "Department / Fest",
-    contactEmail: "Contact Email",
-};
 
 export default function AdminSettingsPage() {
     const router = useRouter();
@@ -45,8 +33,8 @@ export default function AdminSettingsPage() {
         return () => { cancelled = true; };
     }, [router]);
 
-    const updateField = (field: keyof EventSettings, value: string) => {
-        setValues((prev) => (prev ? { ...prev, [field]: value } : prev));
+    const updateField = (field: keyof EventSettings, value: string | boolean) => {
+        setValues((prev) => (prev ? { ...prev, [field]: value as never } : prev));
     };
 
     const handleSave = async () => {
@@ -117,27 +105,51 @@ export default function AdminSettingsPage() {
                     </div>
                 ) : values ? (
                     <div className="space-y-5">
-                        {EDITABLE_EVENT_FIELDS.map((field) => (
-                            <div key={field}>
-                                {field === "description" ? (
+                        {EVENT_SETTING_FIELDS.map((field) => (
+                            <div key={field.key}>
+                                {field.type === "textarea" ? (
                                     <div className="space-y-1.5">
                                         <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider">
-                                            {FIELD_LABELS[field]}
+                                            {field.label}
                                         </label>
                                         <textarea
-                                            value={values[field]}
-                                            onChange={(e) => updateField(field, e.target.value)}
+                                            value={values[field.key] as string}
+                                            onChange={(e) => updateField(field.key, e.target.value)}
                                             rows={4}
                                             className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-4 py-3 text-base text-white placeholder:text-slate-500 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                                         />
                                     </div>
+                                ) : field.type === "boolean" ? (
+                                    <div className="flex items-start justify-between gap-4 rounded-2xl bg-[#150a29] border border-[#2e1457] p-4">
+                                        <div>
+                                            <p className="text-sm font-bold text-white">{field.label}</p>
+                                            {field.hint && (
+                                                <p className="text-xs text-slate-400 mt-0.5">{field.hint}</p>
+                                            )}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={Boolean(values[field.key])}
+                                            onClick={() => updateField(field.key, !values[field.key])}
+                                            className={`relative w-12 h-7 rounded-full transition-colors flex-shrink-0 ${values[field.key] ? "bg-amber-500" : "bg-[#2b144e]"}`}
+                                        >
+                                            <span
+                                                className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${values[field.key] ? "translate-x-[22px]" : "translate-x-0.5"}`}
+                                            />
+                                        </button>
+                                    </div>
                                 ) : (
-                                    <Input
-                                        label={FIELD_LABELS[field]}
-                                        value={values[field]}
-                                        onChange={(e) => updateField(field, e.target.value)}
-                                        type={field === "contactEmail" ? "email" : "text"}
-                                    />
+                                    <div>
+                                        <Input
+                                            label={field.label}
+                                            value={values[field.key] as string}
+                                            onChange={(e) => updateField(field.key, e.target.value)}
+                                        />
+                                        {field.hint && (
+                                            <p className="text-xs text-amber-400/80 mt-1.5">{field.hint}</p>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         ))}

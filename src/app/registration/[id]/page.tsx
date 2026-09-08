@@ -25,7 +25,7 @@ export default async function RegistrationViewPage({
 
     if (error || !attendee) notFound();
 
-    const fullName = `${attendee.first_name} ${attendee.last_name}`;
+    const fullName = `${attendee.first_name} ${attendee.last_name}`.trim();
     const reggieDate = format(new Date(attendee.created_at), "dd MMMM yyyy, h:mm a");
     const checkinDate = attendee.checked_in_at
         ? format(new Date(attendee.checked_in_at), "dd MMMM yyyy, h:mm a")

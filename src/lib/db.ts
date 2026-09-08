@@ -104,7 +104,17 @@ export async function registerAttendee(data: {
             .single();
 
         if (insertError || !rawAttendee) {
-            console.error("Supabase insert error:", insertError);
+            console.error("Supabase insert error:", insertError?.code, insertError?.message);
+            if (insertError?.code === "23505") {
+                const detail = `${insertError.message} ${insertError.details || ""}`;
+                const field = detail.includes("email") ? "email"
+                    : detail.includes("phone") ? "phone"
+                    : detail.includes("usn") ? "usn"
+                    : null;
+                if (field) {
+                    return { success: false, duplicateField: field, error: `This ${field === "usn" ? "USN / ID" : field} is already registered.` };
+                }
+            }
             return { success: false, error: "Database error during registration." };
         }
 

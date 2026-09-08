@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
             found: true,
-            name: `${attendee.first_name} ${attendee.last_name}`,
+            name: `${attendee.first_name} ${attendee.last_name}`.trim(),
             usn: attendee.usn,
             registration_id: attendee.registration_id,
             checked_in: attendee.checked_in,

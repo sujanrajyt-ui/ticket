@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Profile } from "@/types/database";
-import { EDITABLE_EVENT_FIELDS, EventSettings, mergeEventSettings } from "@/config/event";
+import { EVENT_SETTING_FIELDS, EventSettings, mergeEventSettings } from "@/config/event";
 
 async function requireAdmin() {
     const supabase = await createClient();
@@ -53,10 +53,14 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
         }
 
-        const clean: Partial<EventSettings> = {};
-        for (const field of EDITABLE_EVENT_FIELDS) {
-            const value = body?.[field];
-            clean[field] = typeof value === "string" ? value.trim() : "";
+        const clean: Record<string, unknown> = {};
+        for (const field of EVENT_SETTING_FIELDS) {
+            const value = body?.[field.key];
+            if (field.type === "boolean") {
+                clean[field.key] = typeof value === "boolean" ? value : Boolean(value);
+            } else {
+                clean[field.key] = typeof value === "string" ? value.trim() : "";
+            }
         }
 
         const adminClient = await createAdminClient();
@@ -74,7 +78,7 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: "Failed to save settings." }, { status: 500 });
         }
 
-        return NextResponse.json({ ok: true, settings: mergeEventSettings(clean) });
+        return NextResponse.json({ ok: true, settings: mergeEventSettings(clean as Partial<EventSettings>) });
     } catch {
         return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }

@@ -131,7 +131,7 @@ export default function SuccessPage() {
         );
     }
 
-    const fullName = `${attendee.first_name} ${attendee.last_name}`;
+    const fullName = `${attendee.first_name} ${attendee.last_name}`.trim();
 
     return (
         <main className="min-h-screen bg-[#0c0516] text-slate-100 py-8 px-4 sm:py-12">
