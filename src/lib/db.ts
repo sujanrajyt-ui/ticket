@@ -169,9 +169,9 @@ export async function registerAttendee(data: {
 export async function lookupAttendee(rawQuery: string): Promise<Attendee | null> {
     if (!rawQuery) return null;
 
-    // Extract token if rawQuery is a full URL path (e.g., https://site.com/success/TOKEN)
     let search = rawQuery.trim();
     try {
+        search = decodeURIComponent(search).trim();
         if (search.includes("/")) {
             const parts = search.split("/").filter(Boolean);
             search = parts[parts.length - 1] || search;
@@ -193,14 +193,49 @@ export async function lookupAttendee(rawQuery: string): Promise<Attendee | null>
 
     try {
         const supabase = await createAdminClient();
-        const { data } = await supabase
+
+        // 1. Try registration_id (e.g. REG-12345678)
+        const { data: byRegId } = await supabase
             .from("attendees")
             .select("*")
-            .or(`qr_token.eq.${search},registration_id.eq.${search},usn.ilike.${search},id.eq.${search}`)
+            .eq("registration_id", search)
             .maybeSingle();
 
-        return (data as unknown as Attendee) || null;
-    } catch {
+        if (byRegId) return byRegId as unknown as Attendee;
+
+        // 2. Try qr_token
+        const { data: byToken } = await supabase
+            .from("attendees")
+            .select("*")
+            .eq("qr_token", search)
+            .maybeSingle();
+
+        if (byToken) return byToken as unknown as Attendee;
+
+        // 3. Try USN (case-insensitive)
+        const { data: byUsn } = await supabase
+            .from("attendees")
+            .select("*")
+            .ilike("usn", search)
+            .maybeSingle();
+
+        if (byUsn) return byUsn as unknown as Attendee;
+
+        // 4. Try UUID id if valid format
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(search);
+        if (isUuid || search.startsWith("mock-")) {
+            const { data: byId } = await supabase
+                .from("attendees")
+                .select("*")
+                .eq("id", search)
+                .maybeSingle();
+
+            if (byId) return byId as unknown as Attendee;
+        }
+
+        return null;
+    } catch (err) {
+        console.error("lookupAttendee error:", err);
         return null;
     }
 }
