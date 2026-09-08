@@ -35,7 +35,8 @@ export default function AttendeeDetailPage() {
     const fetchAttendee = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/attendees/${params.id}`);
+            const rawId = params.id ? decodeURIComponent(params.id) : "";
+            const res = await fetch(`/api/attendees/${encodeURIComponent(rawId)}`);
             if (!res.ok) { setError("Attendee not found."); return; }
             const json = await res.json();
             setAttendee(json.attendee);
