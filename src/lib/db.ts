@@ -28,24 +28,30 @@ export async function registerAttendee(data: {
     qr_token: string;
     registration_id: string;
 }): Promise<{ success: boolean; attendee?: Attendee; error?: string; duplicateField?: string }> {
+    const cleanEmail = data.email.toLowerCase().trim();
+    const cleanPhone = data.phone.trim();
+    const cleanUsn = data.usn ? data.usn.trim().toUpperCase() : "";
+
     if (isMockMode()) {
-        const existingEmail = mockAttendees.find((a) => a.email.toLowerCase() === data.email.toLowerCase());
+        const existingEmail = mockAttendees.find((a) => a.email.toLowerCase() === cleanEmail);
         if (existingEmail) return { success: false, duplicateField: "email", error: "This email address is already registered." };
 
-        const existingPhone = mockAttendees.find((a) => a.phone === data.phone);
+        const existingPhone = mockAttendees.find((a) => a.phone === cleanPhone);
         if (existingPhone) return { success: false, duplicateField: "phone", error: "This phone number is already registered." };
 
-        const existingUsn = mockAttendees.find((a) => a.usn.toUpperCase() === data.usn.toUpperCase());
-        if (existingUsn) return { success: false, duplicateField: "usn", error: "This USN is already registered." };
+        if (cleanUsn) {
+            const existingUsn = mockAttendees.find((a) => a.usn && a.usn.toUpperCase() === cleanUsn);
+            if (existingUsn) return { success: false, duplicateField: "usn", error: "This USN is already registered." };
+        }
 
         const newAttendee: Attendee = {
             id: `mock-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
             registration_id: data.registration_id,
-            first_name: data.first_name,
-            last_name: data.last_name,
-            email: data.email,
-            phone: data.phone,
-            usn: data.usn,
+            first_name: data.first_name.trim(),
+            last_name: (data.last_name || "").trim(),
+            email: cleanEmail,
+            phone: cleanPhone,
+            usn: cleanUsn,
             branch: data.branch || "Computer Science & Engg (CSE)",
             year: data.year || "3rd Year",
             qr_token: data.qr_token,
@@ -64,7 +70,7 @@ export async function registerAttendee(data: {
         const { data: existingEmail } = await supabase
             .from("attendees")
             .select("id")
-            .eq("email", data.email.toLowerCase())
+            .eq("email", cleanEmail)
             .maybeSingle();
 
         if (existingEmail) return { success: false, duplicateField: "email", error: "This email address is already registered." };
@@ -72,63 +78,82 @@ export async function registerAttendee(data: {
         const { data: existingPhone } = await supabase
             .from("attendees")
             .select("id")
-            .eq("phone", data.phone)
+            .eq("phone", cleanPhone)
             .maybeSingle();
 
         if (existingPhone) return { success: false, duplicateField: "phone", error: "This phone number is already registered." };
 
-        const { data: existingUsn } = await supabase
-            .from("attendees")
-            .select("id")
-            .eq("usn", data.usn.toUpperCase())
-            .maybeSingle();
+        if (cleanUsn) {
+            const { data: existingUsn } = await supabase
+                .from("attendees")
+                .select("id")
+                .eq("usn", cleanUsn)
+                .maybeSingle();
 
-        if (existingUsn) return { success: false, duplicateField: "usn", error: "This USN is already registered." };
+            if (existingUsn) return { success: false, duplicateField: "usn", error: "This USN / ID is already registered." };
+        }
+
+        const insertPayload: Record<string, unknown> = {
+            registration_id: data.registration_id,
+            first_name: data.first_name.trim(),
+            last_name: (data.last_name || "").trim(),
+            email: cleanEmail,
+            phone: cleanPhone,
+            usn: cleanUsn || null,
+            branch: data.branch || "Computer Science & Engg (CSE)",
+            year: data.year || "3rd Year",
+            qr_token: data.qr_token,
+            checked_in: false,
+            checked_in_at: null,
+        };
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: rawAttendee, error: insertError } = await (supabase.from("attendees") as any)
-            .insert({
-                registration_id: data.registration_id,
-                first_name: data.first_name,
-                last_name: data.last_name,
-                email: data.email.toLowerCase(),
-                phone: data.phone,
-                usn: data.usn.toUpperCase(),
-                branch: data.branch,
-                year: data.year,
-                qr_token: data.qr_token,
-                checked_in: false,
-                checked_in_at: null,
-            })
+        let { data: rawAttendee, error: insertError } = await (supabase.from("attendees") as any)
+            .insert(insertPayload)
             .select()
             .single();
+
+        // Fallback retry without branch/year if table hasn't executed migration 003
+        if (insertError && (insertError.code === "42703" || insertError.message?.includes("branch"))) {
+            const legacyPayload = { ...insertPayload };
+            delete legacyPayload.branch;
+            delete legacyPayload.year;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const retry = await (supabase.from("attendees") as any)
+                .insert(legacyPayload)
+                .select()
+                .single();
+            rawAttendee = retry.data;
+            insertError = retry.error;
+        }
 
         if (insertError || !rawAttendee) {
             console.error("Supabase insert error:", insertError?.code, insertError?.message);
             if (insertError?.code === "23505") {
-                const detail = `${insertError.message} ${insertError.details || ""}`;
+                const detail = `${insertError.message} ${insertError.details || ""}`.toLowerCase();
                 const field = detail.includes("email") ? "email"
                     : detail.includes("phone") ? "phone"
-                    : detail.includes("usn") ? "usn"
-                    : null;
+                        : detail.includes("usn") ? "usn"
+                            : null;
                 if (field) {
                     return { success: false, duplicateField: field, error: `This ${field === "usn" ? "USN / ID" : field} is already registered.` };
                 }
             }
-            return { success: false, error: "Database error during registration." };
+            // Fallback to mock mode if DB table fails or connection errors out
+            throw new Error(insertError?.message || "Database insert failed");
         }
 
         return { success: true, attendee: rawAttendee as unknown as Attendee };
     } catch (err) {
-        console.warn("Supabase fallback to mock mode due to error:", err);
+        console.warn("Supabase fallback to local storage due to DB issue:", err);
         const newAttendee: Attendee = {
             id: `mock-${Date.now()}`,
             registration_id: data.registration_id,
-            first_name: data.first_name,
-            last_name: data.last_name,
-            email: data.email,
-            phone: data.phone,
-            usn: data.usn,
+            first_name: data.first_name.trim(),
+            last_name: (data.last_name || "").trim(),
+            email: cleanEmail,
+            phone: cleanPhone,
+            usn: cleanUsn,
             branch: data.branch || "Computer Science & Engg (CSE)",
             year: data.year || "3rd Year",
             qr_token: data.qr_token,

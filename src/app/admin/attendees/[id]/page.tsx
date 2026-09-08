@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, CheckCircle2, Clock, Hash, IdCard, Mail, Phone, User, RotateCcw, UserCheck } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Hash, IdCard, Mail, Phone, User, RotateCcw, UserCheck, Loader2 } from "lucide-react";
 import { Attendee } from "@/types/database";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -48,7 +48,6 @@ export default function AttendeeDetailPage() {
         if (!attendee) return;
         setActionLoading(true);
         try {
-            // Use the lookup token to trigger the atomic check-in
             const res = await fetch("/api/checkin", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -88,16 +87,16 @@ export default function AttendeeDetailPage() {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        <div className="min-h-screen bg-[#0c0516] flex items-center justify-center">
+            <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
         </div>
     );
 
     if (error || !attendee) return (
-        <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-            <div className="text-center">
-                <p className="text-red-400">{error}</p>
-                <button onClick={() => router.back()} className="mt-4 text-violet-400 text-sm">← Go back</button>
+        <div className="min-h-screen bg-[#0c0516] flex items-center justify-center p-4">
+            <div className="text-center bg-[#150a29] border border-[#2e1457] p-8 rounded-3xl max-w-sm w-full">
+                <p className="text-red-400 font-bold">{error}</p>
+                <button onClick={() => router.back()} className="mt-4 text-amber-400 hover:underline text-sm font-semibold">← Go back</button>
             </div>
         </div>
     );
@@ -109,56 +108,61 @@ export default function AttendeeDetailPage() {
         : null;
 
     return (
-        <div className="min-h-screen bg-gray-950 p-4">
-            <div className="max-w-lg mx-auto animate-fade-in">
-                <button
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-6 transition-colors"
-                >
-                    <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-                </button>
+        <div className="min-h-screen bg-[#0c0516] text-white">
+            <header className="border-b border-[#241047] bg-[#120721] sticky top-0 z-20 shadow-md sticky-safe">
+                <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+                    <button
+                        onClick={() => router.back()}
+                        className="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-semibold transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+                    </button>
+                    <span className="text-amber-400 font-mono text-xs font-bold">{attendee.registration_id}</span>
+                </div>
+            </header>
 
+            <main className="max-w-lg mx-auto p-4 space-y-4">
                 {/* Status card */}
-                <div className={`rounded-2xl px-5 py-4 flex items-center gap-4 mb-4 border ${attendee.checked_in ? "bg-emerald-950/50 border-emerald-800" : "bg-violet-950/50 border-violet-800"}`}>
+                <div className={`rounded-3xl p-5 flex items-center gap-4 border shadow-xl ${attendee.checked_in ? "bg-emerald-950/80 border-emerald-700" : "bg-[#150a29] border-[#3b1a6e]"}`}>
                     {attendee.checked_in
-                        ? <CheckCircle2 className="w-8 h-8 text-emerald-400 flex-shrink-0" />
-                        : <Clock className="w-8 h-8 text-violet-400 flex-shrink-0" />}
+                        ? <CheckCircle2 className="w-9 h-9 text-emerald-400 flex-shrink-0" />
+                        : <Clock className="w-9 h-9 text-amber-400 flex-shrink-0" />}
                     <div>
-                        <p className={`text-lg font-bold ${attendee.checked_in ? "text-emerald-400" : "text-violet-400"}`}>
+                        <p className={`text-lg font-black tracking-wide ${attendee.checked_in ? "text-emerald-300" : "text-amber-400"}`}>
                             {attendee.checked_in ? "CHECKED IN" : "REGISTERED"}
                         </p>
-                        {checkedAt && <p className="text-xs text-gray-400 mt-0.5">Checked in on {checkedAt}</p>}
+                        {checkedAt && <p className="text-xs text-slate-300 mt-0.5 font-medium">Checked in on {checkedAt}</p>}
                     </div>
                     <div className="ml-auto">
-                        <Badge variant={attendee.checked_in ? "success" : "info"} dot>
+                        <Badge variant={attendee.checked_in ? "success" : "gold"} dot>
                             {attendee.checked_in ? "CHECKED IN" : "REGISTERED"}
                         </Badge>
                     </div>
                 </div>
 
                 {actionMsg && (
-                    <div className="mb-4 bg-gray-800 border border-white/10 rounded-xl px-4 py-3">
-                        <p className="text-sm text-gray-300">{actionMsg}</p>
+                    <div className="bg-[#150a29] border border-amber-500/30 rounded-2xl px-4 py-3">
+                        <p className="text-xs text-amber-300 font-semibold">{actionMsg}</p>
                     </div>
                 )}
 
                 {/* Details */}
-                <div className="bg-gray-900 border border-white/10 rounded-2xl p-5 space-y-4 mb-4">
+                <div className="bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl p-6 space-y-4 shadow-xl">
                     {[
                         { icon: Hash, label: "Registration ID", value: attendee.registration_id },
                         { icon: User, label: "Name", value: fullName },
                         { icon: Mail, label: "Email", value: attendee.email },
                         { icon: Phone, label: "Phone", value: `+91 ${attendee.phone}` },
-                        { icon: IdCard, label: "USN", value: attendee.usn },
+                        { icon: IdCard, label: "USN", value: attendee.usn || "Not provided" },
                         { icon: Clock, label: "Registered At", value: createdAt },
                     ].map(({ icon: Icon, label, value }) => (
                         <div key={label} className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-violet-950/50 border border-violet-800/30 flex items-center justify-center flex-shrink-0">
-                                <Icon className="w-4 h-4 text-violet-400" />
+                            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0 text-amber-400">
+                                <Icon className="w-4 h-4" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-xs text-gray-500">{label}</p>
-                                <p className="text-sm text-white font-medium break-all">{value}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</p>
+                                <p className="text-sm text-white font-semibold break-all">{value}</p>
                             </div>
                         </div>
                     ))}
@@ -166,28 +170,28 @@ export default function AttendeeDetailPage() {
 
                 {/* Actions — admin only */}
                 {userRole === "admin" && (
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 pt-2">
                         {!attendee.checked_in && (
-                            <Button onClick={() => setShowCheckInModal(true)} fullWidth variant="primary">
+                            <Button onClick={() => setShowCheckInModal(true)} fullWidth variant="primary" size="lg">
                                 <UserCheck className="w-4 h-4" />
                                 Manual Check-In
                             </Button>
                         )}
                         {attendee.checked_in && (
-                            <Button onClick={() => setShowUndoModal(true)} fullWidth variant="secondary">
+                            <Button onClick={() => setShowUndoModal(true)} fullWidth variant="secondary" size="lg">
                                 <RotateCcw className="w-4 h-4" />
                                 Undo Check-In
                             </Button>
                         )}
                     </div>
                 )}
-            </div>
+            </main>
 
             {/* Manual check-in confirm */}
             <Modal isOpen={showCheckInModal} onClose={() => setShowCheckInModal(false)} title="Confirm Manual Check-In">
-                <p className="text-gray-300 text-sm mb-1">Are you sure you want to manually check in:</p>
-                <p className="text-white font-semibold mb-1">{fullName}</p>
-                <p className="text-gray-500 text-xs mb-5">{attendee.usn} · {attendee.registration_id}</p>
+                <p className="text-slate-300 text-sm mb-1">Are you sure you want to manually check in:</p>
+                <p className="text-white font-extrabold text-base mb-1">{fullName}</p>
+                <p className="text-slate-400 text-xs mb-5 font-mono">{attendee.usn} · #{attendee.registration_id}</p>
                 <div className="flex gap-3">
                     <Button onClick={() => setShowCheckInModal(false)} variant="secondary" fullWidth>Cancel</Button>
                     <Button onClick={handleManualCheckIn} fullWidth loading={actionLoading}>Confirm Check-In</Button>
@@ -196,7 +200,7 @@ export default function AttendeeDetailPage() {
 
             {/* Undo check-in confirm */}
             <Modal isOpen={showUndoModal} onClose={() => setShowUndoModal(false)} title="Undo Check-In?">
-                <p className="text-gray-300 text-sm mb-5">This will reset <span className="font-semibold text-white">{fullName}</span>&apos;s check-in status. Their entry record will be cleared.</p>
+                <p className="text-slate-300 text-sm mb-5">This will reset <span className="font-bold text-white">{fullName}</span>&apos;s check-in status. Their entry record will be cleared.</p>
                 <div className="flex gap-3">
                     <Button onClick={() => setShowUndoModal(false)} variant="secondary" fullWidth>Cancel</Button>
                     <Button onClick={handleUndoCheckIn} variant="danger" fullWidth loading={actionLoading}>Undo Check-In</Button>
@@ -205,3 +209,4 @@ export default function AttendeeDetailPage() {
         </div>
     );
 }
+

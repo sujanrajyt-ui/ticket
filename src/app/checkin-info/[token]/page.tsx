@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
+import { lookupAttendee } from "@/lib/db";
 import { notFound } from "next/navigation";
-import { CheckCircle2, Clock, IdCard, QrCode } from "lucide-react";
+import { CheckCircle2, Clock, IdCard, QrCode, Ticket } from "lucide-react";
 import { getEventSettingsServer } from "@/lib/event-config";
 
 export default async function CheckInInfoPage({
@@ -9,59 +10,67 @@ export default async function CheckInInfoPage({
     params: Promise<{ token: string }>;
 }) {
     const { token } = await params;
-    const supabase = await createAdminClient();
     const settings = await getEventSettingsServer();
 
-    const { data: rawAttendee } = await supabase
-        .from("attendees")
-        .select("first_name, last_name, usn, registration_id, checked_in")
-        .eq("qr_token", token)
-        .single();
+    let attendee = await lookupAttendee(token);
 
-    const attendee = rawAttendee as unknown as {
-        first_name: string;
-        last_name: string;
-        usn: string;
-        registration_id: string;
-        checked_in: boolean;
-    } | null;
+    if (!attendee) {
+        try {
+            const supabase = await createAdminClient();
+            const { data } = await supabase
+                .from("attendees")
+                .select("first_name, last_name, usn, registration_id, checked_in")
+                .eq("qr_token", token)
+                .maybeSingle();
+
+            if (data) {
+                attendee = data as unknown as typeof attendee;
+            }
+        } catch { /* ignored */ }
+    }
 
     if (!attendee) notFound();
 
     return (
-        <main className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-            <div className="max-w-xs w-full text-center space-y-4">
-                <div className="w-14 h-14 mx-auto bg-violet-950 border border-violet-800 rounded-2xl flex items-center justify-center">
-                    <QrCode className="w-7 h-7 text-violet-400" />
+        <main className="min-h-screen bg-[#0c0516] text-white flex items-center justify-center p-4">
+            <div className="max-w-sm w-full bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl p-6 shadow-2xl text-center space-y-5">
+                <div className="w-14 h-14 mx-auto bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center text-amber-400">
+                    <Ticket className="w-7 h-7" />
                 </div>
-                <p className="text-xs text-gray-500 uppercase tracking-widest">{settings.name}</p>
-                <h1 className="text-xl font-bold text-white">
-                    {`${attendee.first_name} ${attendee.last_name}`.trim()}
-                </h1>
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border ${attendee.checked_in
-                    ? "bg-emerald-950 border-emerald-800 text-emerald-400"
-                    : "bg-violet-950 border-violet-800 text-violet-400"
+                <div>
+                    <p className="text-[10px] text-amber-400 font-extrabold uppercase tracking-widest">{settings.name}</p>
+                    <h1 className="text-xl font-black text-white mt-1">
+                        {`${attendee.first_name} ${attendee.last_name}`.trim()}
+                    </h1>
+                </div>
+
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-extrabold border ${attendee.checked_in
+                    ? "bg-emerald-950/80 border-emerald-700 text-emerald-300"
+                    : "bg-amber-500/10 border-amber-500/30 text-amber-400"
                     }`}>
                     {attendee.checked_in
-                        ? <><CheckCircle2 className="w-4 h-4" /> Checked In</>
-                        : <><Clock className="w-4 h-4" /> Registered</>}
+                        ? <><CheckCircle2 className="w-4 h-4 text-emerald-400" /> CHECKED IN</>
+                        : <><Clock className="w-4 h-4 text-amber-400" /> REGISTERED PASS</>}
                 </div>
-                <div className="bg-gray-900 border border-white/10 rounded-xl p-4 text-left space-y-3 text-sm">
-                    <div className="flex items-center gap-2">
-                        <IdCard className="w-4 h-4 text-gray-500" />
-                        <span className="text-gray-400">USN:</span>
-                        <span className="text-white font-mono">{attendee.usn}</span>
+
+                <div className="bg-[#120721] border border-[#2b144e] rounded-2xl p-4 text-left space-y-3 text-xs">
+                    <div className="flex items-center gap-2.5">
+                        <IdCard className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                        <span className="text-slate-400 font-medium">USN:</span>
+                        <span className="text-amber-400 font-mono font-bold">{attendee.usn || "Not provided"}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <QrCode className="w-4 h-4 text-gray-500" />
-                        <span className="text-gray-400">ID:</span>
-                        <span className="text-white font-mono text-xs">{attendee.registration_id}</span>
+                    <div className="flex items-center gap-2.5">
+                        <QrCode className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                        <span className="text-slate-400 font-medium">Reg ID:</span>
+                        <span className="text-white font-mono">{attendee.registration_id}</span>
                     </div>
                 </div>
-                <p className="text-xs text-gray-600">
-                    Show your QR code to the event volunteer for check-in.
+
+                <p className="text-[11px] text-slate-400 font-medium">
+                    Show your QR code to the event volunteer at Sadananda Auditorium for check-in.
                 </p>
             </div>
         </main>
     );
 }
+
