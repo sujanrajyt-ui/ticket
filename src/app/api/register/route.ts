@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { registerAttendee } from "@/lib/db";
 import { generateQRToken, generateRegistrationId } from "@/lib/qr";
 import { EVENT_CONFIG } from "@/config/event";
 import { z } from "zod";
@@ -16,15 +16,17 @@ const registrationSchema = z.object({
             .string()
             .regex(
                 EVENT_CONFIG.usnRegex,
-                "Invalid USN format. Example: 1RV22CS001"
+                "Invalid USN format. Example: 4NM22CS001"
             )
         : z.string().min(1, "USN is required"),
+    branch: z.string().optional(),
+    year: z.string().optional(),
 });
 
-// Simple in-memory rate limiter per IP (resets on every cold start)
+// Simple in-memory rate limiter per IP
 const ipRegistry = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 5; // 5 registrations per IP per window
-const WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT = 10;
+const WINDOW_MS = 60 * 1000;
 
 function checkRateLimit(ip: string): boolean {
     const now = Date.now();
@@ -40,7 +42,6 @@ function checkRateLimit(ip: string): boolean {
 
 export async function POST(request: NextRequest) {
     try {
-        // Rate limiting
         const ip =
             request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
             "unknown";
@@ -63,106 +64,35 @@ export async function POST(request: NextRequest) {
         }
 
         const data = parsed.data;
-        const supabase = await createAdminClient();
+        const qrToken = generateQRToken();
+        const registrationId = generateRegistrationId();
 
-        // Duplicate checks
-        const duplicateChecks: { field: string; value: string; label: string }[] =
-            [];
+        const result = await registerAttendee({
+            first_name: data.first_name.trim(),
+            last_name: data.last_name.trim(),
+            email: data.email.toLowerCase().trim(),
+            phone: data.phone.trim(),
+            usn: data.usn.toUpperCase().trim(),
+            branch: data.branch || "Computer Science & Engg (CSE)",
+            year: data.year || "3rd Year",
+            qr_token: qrToken,
+            registration_id: registrationId,
+        });
 
-        if (EVENT_CONFIG.checkDuplicateEmail)
-            duplicateChecks.push({
-                field: "email",
-                value: data.email.toLowerCase(),
-                label: "email address",
-            });
-        if (EVENT_CONFIG.checkDuplicatePhone)
-            duplicateChecks.push({
-                field: "phone",
-                value: data.phone,
-                label: "phone number",
-            });
-        if (EVENT_CONFIG.checkDuplicateUsn)
-            duplicateChecks.push({
-                field: "usn",
-                value: data.usn.toUpperCase(),
-                label: "USN",
-            });
-
-        for (const check of duplicateChecks) {
-            const { data: existing, error } = await supabase
-                .from("attendees")
-                .select("id")
-                .eq(check.field, check.value)
-                .maybeSingle();
-
-            if (error) {
-                console.error("Duplicate check error:", error);
-                return NextResponse.json(
-                    { error: "Database error. Please try again." },
-                    { status: 500 }
-                );
-            }
-
-            if (existing) {
+        if (!result.success || !result.attendee) {
+            if (result.duplicateField) {
                 return NextResponse.json(
                     {
                         errors: {
-                            [check.field]: `This ${check.label} is already registered.`,
+                            [result.duplicateField]: result.error || "Details already registered.",
                         },
                         duplicate: true,
                     },
                     { status: 409 }
                 );
             }
-        }
-
-        // Generate unique tokens
-        const qrToken = generateQRToken();
-        const registrationId = generateRegistrationId();
-
-        // Insert attendee
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: rawAttendee, error: insertError } = await (supabase.from("attendees") as any)
-            .insert({
-                registration_id: registrationId,
-                first_name: data.first_name.trim(),
-                last_name: data.last_name.trim(),
-                email: data.email.toLowerCase().trim(),
-                phone: data.phone.trim(),
-                usn: data.usn.toUpperCase().trim(),
-                qr_token: qrToken,
-                checked_in: false,
-                checked_in_at: null,
-            })
-            .select()
-            .single();
-
-        const attendee = rawAttendee as unknown as {
-            registration_id: string;
-            qr_token: string;
-            first_name: string;
-            last_name: string;
-            email: string;
-            phone: string;
-            usn: string;
-            created_at: string;
-        } | null;
-
-        if (insertError || !attendee) {
-            console.error("Insert error:", insertError);
-            // Handle unique constraint violations gracefully
-            if (insertError?.code === "23505") {
-                return NextResponse.json(
-                    {
-                        error:
-                            "A registration with these details already exists. Please check your information.",
-                        duplicate: true,
-                    },
-                    { status: 409 }
-                );
-            }
             return NextResponse.json(
-                { error: "Registration failed. Please try again." },
+                { error: result.error || "Registration failed. Please try again." },
                 { status: 500 }
             );
         }
@@ -170,17 +100,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
             {
                 success: true,
-                registration_id: attendee.registration_id,
-                qr_token: attendee.qr_token,
-                attendee: {
-                    first_name: attendee.first_name,
-                    last_name: attendee.last_name,
-                    email: attendee.email,
-                    phone: attendee.phone,
-                    usn: attendee.usn,
-                    registration_id: attendee.registration_id,
-                    created_at: attendee.created_at,
-                },
+                registration_id: result.attendee.registration_id,
+                qr_token: result.attendee.qr_token,
+                attendee: result.attendee,
             },
             { status: 201 }
         );

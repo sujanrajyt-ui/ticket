@@ -1,32 +1,43 @@
-import { cn } from "@/lib/utils";
+import { ReactNode } from "react";
 
 interface StatsCardProps {
     title: string;
     value: string | number;
+    icon: ReactNode;
     subtitle?: string;
-    icon: React.ReactNode;
     color?: "violet" | "emerald" | "amber" | "blue";
 }
 
-export default function StatsCard({ title, value, subtitle, icon, color = "violet" }: StatsCardProps) {
-    const colors = {
-        violet: { bg: "bg-violet-950/50", icon: "bg-violet-900/60 text-violet-400", border: "border-violet-800/30" },
-        emerald: { bg: "bg-emerald-950/50", icon: "bg-emerald-900/60 text-emerald-400", border: "border-emerald-800/30" },
-        amber: { bg: "bg-amber-950/50", icon: "bg-amber-900/60 text-amber-400", border: "border-amber-800/30" },
-        blue: { bg: "bg-blue-950/50", icon: "bg-blue-900/60 text-blue-400", border: "border-blue-800/30" },
+export default function StatsCard({
+    title,
+    value,
+    icon,
+    subtitle,
+    color = "violet",
+}: StatsCardProps) {
+    const borderColors = {
+        violet: "border-[#3b1a6e]",
+        emerald: "border-emerald-800/60",
+        amber: "border-amber-700/60",
+        blue: "border-blue-800/60",
     };
 
-    const c = colors[color];
+    const iconBg = {
+        violet: "bg-[#250d48] text-amber-400 border border-amber-500/30",
+        emerald: "bg-emerald-950/80 text-emerald-400 border border-emerald-800",
+        amber: "bg-amber-950/80 text-amber-400 border border-amber-800",
+        blue: "bg-blue-950/80 text-blue-400 border border-blue-800",
+    };
 
     return (
-        <div className={cn("rounded-2xl border p-5 flex items-center gap-4", c.bg, c.border)}>
-            <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0", c.icon)}>
-                {icon}
+        <div className={`bg-[#140929] border ${borderColors[color]} rounded-3xl p-5 shadow-sm space-y-3`}>
+            <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">{title}</span>
+                <div className={`p-2.5 rounded-2xl ${iconBg[color]}`}>{icon}</div>
             </div>
-            <div className="min-w-0">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest truncate">{title}</p>
-                <p className="text-3xl font-bold text-white mt-0.5">{value}</p>
-                {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+            <div>
+                <p className="text-2xl font-extrabold text-white tracking-tight">{value}</p>
+                {subtitle && <p className="text-xs text-slate-400 mt-1 font-medium">{subtitle}</p>}
             </div>
         </div>
     );

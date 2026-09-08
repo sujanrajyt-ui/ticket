@@ -87,17 +87,17 @@ export default function ScannerPage() {
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
                 handleScan,
-                () => { } // errors during scanning are normal (frame without QR)
+                () => { }
             );
             setCameraError(null);
         } catch (err) {
             if (err instanceof Error) {
                 if (err.message.includes("permission") || err.message.includes("NotAllowed")) {
-                    setCameraError("Camera permission denied. Please allow camera access in your browser settings and reload.");
+                    setCameraError("Camera permission denied. Please allow camera access in browser settings.");
                 } else if (err.message.includes("NotFound") || err.message.includes("no camera")) {
                     setCameraError("No camera found on this device.");
                 } else {
-                    setCameraError("Could not start camera. Please try reloading the page.");
+                    setCameraError("Could not start camera. Please try reloading.");
                 }
             }
         }
@@ -131,18 +131,6 @@ export default function ScannerPage() {
                 body: JSON.stringify({ token: currentToken }),
             });
 
-            if (!res.ok && res.status !== 200) {
-                const json = await res.json();
-                if (json.message === "ALREADY_CHECKED_IN") {
-                    setState("already_checked_in");
-                    return;
-                }
-                setCameraError("Check-in failed. Please try again.");
-                setState("scanning");
-                await startCamera();
-                return;
-            }
-
             const json = await res.json();
 
             if (json.success || json.message === "SUCCESS") {
@@ -150,12 +138,12 @@ export default function ScannerPage() {
                 setState("checked_in_success");
             } else if (json.message === "ALREADY_CHECKED_IN") {
                 setState("already_checked_in");
-                setScanResult({ ...scanResult, checked_in_at: json.attendee_data?.checked_in_at });
+                setScanResult({ ...scanResult, checked_in_at: json.attendee?.checked_in_at });
             } else {
                 setState("invalid");
             }
         } catch {
-            setCameraError("Network error during check-in. The check-in was NOT recorded.");
+            setCameraError("Network error during check-in.");
             setState("scanning");
             await startCamera();
         } finally {
@@ -174,16 +162,16 @@ export default function ScannerPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-950 flex flex-col">
+        <div className="min-h-screen bg-[#0c0516] text-white flex flex-col">
             {/* Header */}
-            <header className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+            <header className="flex items-center justify-between px-4 py-4 bg-[#120721] border-b border-[#241047] shadow-md">
                 <button
                     onClick={() => { stopCamera(); router.push("/admin"); }}
-                    className="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors"
+                    className="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-semibold transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" /> Dashboard
                 </button>
-                <h1 className="text-sm font-bold text-white">QR Scanner</h1>
+                <h1 className="text-sm font-extrabold text-amber-400">QR Kiosk Scanner</h1>
                 <div className="w-20" />
             </header>
 
@@ -192,36 +180,36 @@ export default function ScannerPage() {
                 {(state === "scanning" || state === "loading") && (
                     <div className="w-full max-w-sm">
                         {cameraError ? (
-                            <div className="text-center space-y-4">
-                                <div className="w-16 h-16 mx-auto bg-red-950 border border-red-800 rounded-2xl flex items-center justify-center">
-                                    <CameraOff className="w-8 h-8 text-red-400" />
+                            <div className="text-center space-y-4 bg-[#150a29] border border-red-900/60 p-6 rounded-3xl shadow-xl">
+                                <div className="w-14 h-14 mx-auto bg-red-950 border border-red-800 rounded-2xl flex items-center justify-center">
+                                    <CameraOff className="w-7 h-7 text-red-400" />
                                 </div>
-                                <p className="text-red-400 font-semibold">Camera Error</p>
-                                <p className="text-gray-400 text-sm">{cameraError}</p>
+                                <p className="text-red-400 font-bold text-base">Camera Unavailable</p>
+                                <p className="text-slate-400 text-xs">{cameraError}</p>
                                 <Button onClick={() => { setCameraError(null); startCamera(); }} variant="secondary">
                                     Try Again
                                 </Button>
                             </div>
                         ) : (
                             <>
-                                <p className="text-center text-gray-400 text-sm mb-4 flex items-center justify-center gap-2">
-                                    <Camera className="w-4 h-4" />
-                                    {state === "loading" ? "Reading QR…" : "Point camera at attendee's QR code"}
+                                <p className="text-center text-slate-300 text-xs font-semibold mb-4 flex items-center justify-center gap-2">
+                                    <Camera className="w-4 h-4 text-amber-400" />
+                                    {state === "loading" ? "Reading QR Token…" : "Point camera at attendee's ticket pass QR"}
                                 </p>
                                 {/* Scanner container */}
                                 <div
                                     id="qr-scanner-container"
                                     ref={scannerRef}
-                                    className="w-full aspect-square rounded-2xl overflow-hidden bg-gray-900 border-2 border-violet-800 relative"
+                                    className="w-full aspect-square rounded-3xl overflow-hidden bg-[#120721] border-2 border-[#3b1a6e] shadow-2xl relative"
                                 >
                                     {state === "loading" && (
-                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
-                                            <div className="w-8 h-8 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                                        <div className="absolute inset-0 bg-black/60 backdrop-blur-2xs flex items-center justify-center z-10">
+                                            <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
                                         </div>
                                     )}
                                 </div>
-                                <p className="text-center text-xs text-gray-600 mt-3">
-                                    Align the QR code within the frame
+                                <p className="text-center text-[11px] text-slate-400 mt-3 font-medium">
+                                    Align the QR code within the frame for instant scan
                                 </p>
                             </>
                         )}
@@ -231,20 +219,20 @@ export default function ScannerPage() {
                 {/* VALID (not yet checked in) */}
                 {state === "valid" && scanResult && (
                     <div className="w-full max-w-sm animate-slide-up">
-                        <div className="rounded-2xl bg-emerald-950/60 border-2 border-emerald-700 p-6 text-center mb-4">
-                            <CheckCircle2 className="w-14 h-14 text-emerald-400 mx-auto mb-3" />
-                            <p className="text-emerald-300 font-bold text-lg tracking-wide">VALID REGISTRATION</p>
-                            <p className="text-white font-semibold text-xl mt-2">{scanResult.name}</p>
-                            <p className="text-gray-400 text-sm mt-1">{scanResult.usn}</p>
-                            <p className="text-gray-500 text-xs mt-1">{scanResult.registration_id}</p>
+                        <div className="rounded-3xl bg-emerald-950/80 border-2 border-emerald-700 p-6 text-center mb-4 shadow-xl">
+                            <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                            <p className="text-emerald-300 font-extrabold text-base tracking-wide uppercase">VALID TICKET PASS</p>
+                            <p className="text-white font-black text-xl mt-2">{scanResult.name}</p>
+                            <p className="text-amber-400 font-mono text-xs font-bold mt-1">USN: {scanResult.usn}</p>
+                            <p className="text-slate-400 font-mono text-[11px] mt-0.5">#{scanResult.registration_id}</p>
                         </div>
                         <div className="space-y-3">
                             <Button onClick={handleCheckIn} fullWidth size="lg" loading={checkingIn}
-                                className="bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/40 shadow-lg">
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-base py-3.5 shadow-lg border-emerald-500">
                                 <CheckCircle2 className="w-5 h-5" />
-                                CHECK IN
+                                CONFIRM CHECK IN
                             </Button>
-                            <Button onClick={resetScanner} variant="ghost" fullWidth>
+                            <Button onClick={resetScanner} variant="secondary" fullWidth>
                                 <RotateCcw className="w-4 h-4" /> Scan Another
                             </Button>
                         </div>
@@ -254,16 +242,16 @@ export default function ScannerPage() {
                 {/* CHECKED IN SUCCESS */}
                 {state === "checked_in_success" && scanResult && (
                     <div className="w-full max-w-sm animate-slide-up">
-                        <div className="rounded-2xl bg-emerald-950/80 border-2 border-emerald-600 p-6 text-center mb-4">
-                            <div className="w-16 h-16 mx-auto mb-3 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+                        <div className="rounded-3xl bg-emerald-950/90 border-2 border-emerald-600 p-6 text-center mb-4 shadow-xl">
+                            <div className="w-14 h-14 mx-auto mb-3 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
                             </div>
-                            <p className="text-emerald-300 font-bold text-xl tracking-wide">CHECK-IN SUCCESSFUL</p>
-                            <p className="text-white font-semibold text-lg mt-2">{scanResult.name}</p>
-                            <p className="text-emerald-400/80 text-sm mt-2">Entry recorded at {checkInTime}</p>
+                            <p className="text-emerald-300 font-extrabold text-lg tracking-wide">CHECK-IN SUCCESSFUL</p>
+                            <p className="text-white font-black text-lg mt-1">{scanResult.name}</p>
+                            <p className="text-emerald-400 text-xs font-semibold mt-2">Entry recorded at {checkInTime}</p>
                         </div>
                         <Button onClick={resetScanner} fullWidth size="lg">
-                            <Camera className="w-4 h-4" /> Scan Next
+                            <Camera className="w-4 h-4" /> Scan Next Attendee
                         </Button>
                     </div>
                 )}
@@ -271,17 +259,17 @@ export default function ScannerPage() {
                 {/* ALREADY CHECKED IN */}
                 {state === "already_checked_in" && scanResult && (
                     <div className="w-full max-w-sm animate-slide-up">
-                        <div className="rounded-2xl bg-amber-950/60 border-2 border-amber-700 p-6 text-center mb-4">
-                            <AlertTriangle className="w-14 h-14 text-amber-400 mx-auto mb-3" />
-                            <p className="text-amber-300 font-bold text-lg tracking-wide">ALREADY CHECKED IN</p>
-                            <p className="text-white font-semibold text-xl mt-2">{scanResult.name}</p>
-                            <p className="text-gray-400 text-sm mt-1">{scanResult.registration_id}</p>
+                        <div className="rounded-3xl bg-amber-950/80 border-2 border-amber-700 p-6 text-center mb-4 shadow-xl">
+                            <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-3" />
+                            <p className="text-amber-300 font-extrabold text-base tracking-wide uppercase">ALREADY CHECKED IN</p>
+                            <p className="text-white font-black text-xl mt-2">{scanResult.name}</p>
+                            <p className="text-slate-400 font-mono text-xs mt-1">#{scanResult.registration_id}</p>
                             {scanResult.checked_in_at && (
-                                <p className="text-amber-400/80 text-sm mt-3">
+                                <p className="text-amber-300 text-xs font-medium mt-3">
                                     Original check-in: {format(new Date(scanResult.checked_in_at), "dd MMM, h:mm a")}
                                 </p>
                             )}
-                            <p className="text-gray-500 text-xs mt-2">Duplicate entry blocked.</p>
+                            <p className="text-amber-400 text-[11px] font-bold mt-2 uppercase tracking-wider">Duplicate Entry Blocked</p>
                         </div>
                         <Button onClick={resetScanner} variant="secondary" fullWidth size="lg">
                             <RotateCcw className="w-4 h-4" /> Scan Another
@@ -292,11 +280,11 @@ export default function ScannerPage() {
                 {/* INVALID QR */}
                 {state === "invalid" && (
                     <div className="w-full max-w-sm animate-slide-up">
-                        <div className="rounded-2xl bg-red-950/60 border-2 border-red-700 p-6 text-center mb-4">
-                            <XCircle className="w-14 h-14 text-red-400 mx-auto mb-3" />
-                            <p className="text-red-300 font-bold text-lg tracking-wide">INVALID QR</p>
-                            <p className="text-gray-400 text-sm mt-2">Registration not found.</p>
-                            <p className="text-gray-500 text-xs mt-1">This QR code is not registered in the system.</p>
+                        <div className="rounded-3xl bg-red-950/80 border-2 border-red-700 p-6 text-center mb-4 shadow-xl">
+                            <XCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+                            <p className="text-red-300 font-extrabold text-base tracking-wide uppercase">INVALID TICKET PASS</p>
+                            <p className="text-slate-300 text-xs mt-2 font-medium">Registration record not found.</p>
+                            <p className="text-slate-400 text-[11px] mt-1">This QR pass is not registered in the system.</p>
                         </div>
                         <Button onClick={resetScanner} variant="secondary" fullWidth size="lg">
                             <RotateCcw className="w-4 h-4" /> Try Again

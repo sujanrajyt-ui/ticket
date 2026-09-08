@@ -1,52 +1,29 @@
-// ============================================================
-// EVENT CONFIGURATION — Edit this file to customise your event
-// ============================================================
-
 export const EVENT_CONFIG = {
-  // Basic info
-  name: "TechFest 2025",
-  tagline: "Annual Technical Extravaganza",
-  description:
-    "Join us for an exciting day of innovation, competition, and networking. Register now to secure your free entry.",
-
-  // Date & venue
-  date: "15 November 2025",
-  time: "9:00 AM – 5:00 PM",
-  venue: "Main Auditorium, College Campus",
-
-  // Organiser
-  collegeName: "Your College Name",
-  department: "Department of Computer Science & Engineering",
-
-  // Theme colour (used in banner gradient — Tailwind class names)
-  // Options: "from-violet-900 via-purple-900 to-indigo-900"
-  //          "from-blue-900 via-cyan-900 to-teal-900"
-  //          "from-rose-900 via-pink-900 to-fuchsia-900"
-  gradientFrom: "from-violet-950",
-  gradientVia: "via-purple-900",
-  gradientTo: "to-indigo-900",
-
-  // Accent colour for buttons / badges (Tailwind class names)
-  accentBg: "bg-violet-600",
-  accentHover: "hover:bg-violet-500",
-  accentText: "text-violet-400",
-  accentBorder: "border-violet-500",
-  accentRing: "focus:ring-violet-500",
-
-  // Registration settings
-  // Duplicate check: block if same email OR phone OR USN already exists
+  name: "NITTE'S GOT LATENT",
+  tagline: "Showcase Your Hidden Talent on the Ultimate Stage",
+  collegeName: "NMAM Institute of Technology, Nitte",
+  department: "VISTA 2025",
+  description: "The ultimate cultural & talent showcase at NMAMIT Nitte. Register to claim your official digital entry ticket pass.",
+  date: "15th March 2025",
+  time: "05:00 PM Onwards",
+  venue: "Sadananda Auditorium, NMAMIT Campus",
+  contactEmail: "latent@nitte.edu.in",
+  usnRegex: /^[1-4][A-Z]{2}\d{2}[A-Z]{2}\d{3}$/i,
+  usnHelperText: "Enter your official USN (e.g. 4NM22CS001)",
   checkDuplicateEmail: true,
   checkDuplicatePhone: true,
   checkDuplicateUsn: true,
-
-  // USN validation regex (VTU format: e.g. 1RV22CS001)
-  // Set to null to skip USN format validation (just require non-empty)
-  usnRegex: /^[1-9][A-Z]{2}\d{2}[A-Z]{2}\d{3}$/i,
-  usnHelperText: "Enter your University Seat Number (USN). Example: 1RV22CS001",
-
-  // Social / contact (optional, shown in footer)
-  contactEmail: "events@yourcollege.edu",
-  instagramHandle: "@yourcollege_events",
+  branches: [
+    "Computer Science & Engg (CSE)",
+    "Information Science (ISE)",
+    "Electronics & Comm (ECE)",
+    "Electrical & Electronics (EEE)",
+    "Mechanical Engineering (ME)",
+    "Civil Engineering (CIV)",
+    "Artificial Intelligence & DS (AIDS)",
+    "Biotechnology (BT)",
+    "Robotics & Automation (RA)",
+    "Other",
+  ],
+  years: ["1st Year", "2nd Year", "3rd Year", "4th Year", "Postgraduate"],
 };
-
-export type EventConfig = typeof EVENT_CONFIG;

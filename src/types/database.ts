@@ -14,6 +14,8 @@ export interface Attendee {
     email: string;
     phone: string;
     usn: string;
+    branch?: string;
+    year?: string;
     qr_token: string;
     checked_in: boolean;
     checked_in_at: string | null;
@@ -38,6 +40,8 @@ export interface Database {
                     email: string;
                     phone: string;
                     usn: string;
+                    branch?: string;
+                    year?: string;
                     qr_token: string;
                     checked_in?: boolean;
                     checked_in_at?: string | null;
@@ -51,6 +55,8 @@ export interface Database {
                     email?: string;
                     phone?: string;
                     usn?: string;
+                    branch?: string;
+                    year?: string;
                     qr_token?: string;
                     checked_in?: boolean;
                     checked_in_at?: string | null;
@@ -104,6 +110,8 @@ export interface RegistrationInput {
     email: string;
     phone: string;
     usn: string;
+    branch?: string;
+    year?: string;
 }
 
 export interface AttendeeStats {

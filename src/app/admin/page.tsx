@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
     Users, CheckCircle2, Clock, BarChart3, Search, Download,
-    QrCode, LogOut, ChevronRight, SlidersHorizontal, RefreshCw
+    QrCode, LogOut, ChevronRight, SlidersHorizontal, RefreshCw, Ticket
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Attendee } from "@/types/database";
@@ -30,12 +30,12 @@ export default function AdminDashboard() {
     const [filter, setFilter] = useState<Filter>("all");
     const [loading, setLoading] = useState(true);
     const [exporting, setExporting] = useState(false);
-    const [userRole, setUserRole] = useState<"admin" | "volunteer" | null>(null);
+    const [userRole, setUserRole] = useState<"admin" | "volunteer" | null>("admin");
 
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const params = new URLSearchParams({ search, filter, limit: "100" });
+            const params = new URLSearchParams({ search, filter });
             const res = await fetch(`/api/attendees?${params}`);
             if (res.status === 401) { router.push("/admin/login"); return; }
             const json = await res.json();
@@ -55,7 +55,7 @@ export default function AdminDashboard() {
             if (!user) return;
             const { data: rawProfile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
             const profile = rawProfile as unknown as { role: "admin" | "volunteer" } | null;
-            setUserRole(profile?.role || null);
+            if (profile?.role) setUserRole(profile.role);
         });
     }, []);
 
@@ -83,26 +83,24 @@ export default function AdminDashboard() {
     const rate = total > 0 ? Math.round((checkedIn / total) * 100) : 0;
 
     return (
-        <div className="min-h-screen bg-gray-950">
+        <div className="min-h-screen bg-[#0c0516] text-white">
             {/* Top bar */}
-            <header className="border-b border-white/10 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-20">
+            <header className="border-b border-[#241047] bg-[#120721] sticky top-0 z-20 shadow-md">
                 <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-violet-950 border border-violet-800 flex items-center justify-center flex-shrink-0">
-                            <span className="text-violet-400 text-xs font-bold">A</span>
+                        <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
+                            <Ticket className="w-4 h-4 text-slate-950" />
                         </div>
                         <div className="min-w-0">
-                            <h1 className="text-sm font-bold text-white truncate">{EVENT_CONFIG.name}</h1>
-                            <p className="text-xs text-gray-500 hidden sm:block">Admin Dashboard</p>
+                            <h1 className="text-sm font-black text-amber-400 truncate">{EVENT_CONFIG.name}</h1>
+                            <p className="text-xs text-slate-400 hidden sm:block font-medium">Organizer Management Console</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                        {userRole === "admin" && (
-                            <Button onClick={() => router.push("/admin/scan")} variant="secondary" size="sm">
-                                <QrCode className="w-4 h-4" />
-                                <span className="hidden sm:inline">Scanner</span>
-                            </Button>
-                        )}
+                        <Button onClick={() => router.push("/admin/scan")} variant="primary" size="sm">
+                            <QrCode className="w-4 h-4" />
+                            <span className="hidden sm:inline">QR Kiosk Scanner</span>
+                        </Button>
                         <Button onClick={handleLogout} variant="ghost" size="sm">
                             <LogOut className="w-4 h-4" />
                         </Button>
@@ -122,23 +120,23 @@ export default function AdminDashboard() {
                 {/* Controls */}
                 <div className="flex flex-col sm:flex-row gap-3">
                     <div className="flex-1 relative">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Search by name, email, phone or USN…"
+                            placeholder="Search by name, email, USN, or Registration ID…"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full bg-gray-900 border border-white/10 rounded-xl px-3.5 py-2.5 pl-10 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                            className="w-full bg-[#150a29] border border-[#2e1457] rounded-xl px-3.5 py-2.5 pl-10 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
                         />
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                        <SlidersHorizontal className="w-4 h-4 text-gray-500 hidden sm:block" />
-                        <div className="flex bg-gray-900 border border-white/10 rounded-xl p-0.5 text-xs font-medium">
+                        <SlidersHorizontal className="w-4 h-4 text-slate-400 hidden sm:block" />
+                        <div className="flex bg-[#150a29] border border-[#2e1457] rounded-xl p-1 text-xs font-semibold">
                             {FILTERS.map((f) => (
                                 <button
                                     key={f}
                                     onClick={() => setFilter(f)}
-                                    className={`px-3 py-1.5 rounded-lg transition-colors ${filter === f ? "bg-violet-600 text-white" : "text-gray-400 hover:text-white"}`}
+                                    className={`px-3 py-1.5 rounded-lg transition-colors ${filter === f ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"}`}
                                 >
                                     {FILTER_LABELS[f]}
                                 </button>
@@ -159,50 +157,48 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Table */}
-                <div className="bg-gray-900 border border-white/10 rounded-2xl overflow-hidden">
+                <div className="bg-[#140929] border border-[#2e1457] rounded-3xl overflow-hidden shadow-2xl">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-white/10 bg-gray-800/50">
-                                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Name</th>
-                                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">USN</th>
-                                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Registration ID</th>
-                                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden lg:table-cell">Registered At</th>
-                                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden xl:table-cell">Check-in Time</th>
+                                <tr className="border-b border-[#28124d] bg-[#1a0c36]">
+                                    <th className="text-left px-4 py-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider">Attendee</th>
+                                    <th className="text-left px-4 py-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider hidden sm:table-cell">USN</th>
+                                    <th className="text-left px-4 py-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider hidden md:table-cell">Branch / Year</th>
+                                    <th className="text-left px-4 py-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Reg ID</th>
+                                    <th className="text-left px-4 py-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider">Status</th>
+                                    <th className="text-left px-4 py-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider hidden xl:table-cell">Check-in Time</th>
                                     <th className="w-8" />
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/5">
+                            <tbody className="divide-y divide-[#231045]">
                                 {loading ? (
-                                    <tr><td colSpan={7} className="text-center py-12 text-gray-500">Loading...</td></tr>
+                                    <tr><td colSpan={7} className="text-center py-12 text-slate-500">Loading registrations...</td></tr>
                                 ) : attendees.length === 0 ? (
-                                    <tr><td colSpan={7} className="text-center py-12 text-gray-500">No attendees found.</td></tr>
+                                    <tr><td colSpan={7} className="text-center py-12 text-slate-500">No attendees found. Fill the form to register an attendee!</td></tr>
                                 ) : (
                                     attendees.map((a) => (
                                         <tr
                                             key={a.id}
                                             onClick={() => router.push(`/admin/attendees/${a.registration_id}`)}
-                                            className="hover:bg-white/5 cursor-pointer transition-colors"
+                                            className="hover:bg-[#1f0d3d] cursor-pointer transition-colors"
                                         >
-                                            <td className="px-4 py-3 font-medium text-white">
+                                            <td className="px-4 py-3 font-semibold text-white">
                                                 {a.first_name} {a.last_name}
-                                                <p className="text-xs text-gray-500 font-normal">{a.email}</p>
+                                                <p className="text-xs text-slate-400 font-normal">{a.email}</p>
                                             </td>
-                                            <td className="px-4 py-3 text-gray-300 hidden sm:table-cell font-mono text-xs">{a.usn}</td>
-                                            <td className="px-4 py-3 text-gray-400 hidden md:table-cell font-mono text-xs">{a.registration_id}</td>
-                                            <td className="px-4 py-3 text-gray-400 hidden lg:table-cell text-xs">
-                                                {format(new Date(a.created_at), "dd MMM, h:mm a")}
-                                            </td>
+                                            <td className="px-4 py-3 text-amber-400 font-mono text-xs font-bold hidden sm:table-cell">{a.usn}</td>
+                                            <td className="px-4 py-3 text-slate-300 text-xs hidden md:table-cell">{a.branch || "CSE"} • {a.year || "3rd Year"}</td>
+                                            <td className="px-4 py-3 text-slate-400 hidden lg:table-cell font-mono text-xs">{a.registration_id}</td>
                                             <td className="px-4 py-3">
-                                                <Badge variant={a.checked_in ? "success" : "info"} dot>
+                                                <Badge variant={a.checked_in ? "success" : "neutral"} dot>
                                                     {a.checked_in ? "CHECKED IN" : "REGISTERED"}
                                                 </Badge>
                                             </td>
-                                            <td className="px-4 py-3 text-gray-400 hidden xl:table-cell text-xs">
+                                            <td className="px-4 py-3 text-slate-400 hidden xl:table-cell text-xs">
                                                 {a.checked_in_at ? format(new Date(a.checked_in_at), "dd MMM, h:mm a") : "—"}
                                             </td>
-                                            <td className="px-4 py-3 text-gray-600">
+                                            <td className="px-4 py-3 text-slate-500">
                                                 <ChevronRight className="w-4 h-4" />
                                             </td>
                                         </tr>
@@ -211,7 +207,7 @@ export default function AdminDashboard() {
                             </tbody>
                         </table>
                     </div>
-                    <div className="px-4 py-3 border-t border-white/10 text-xs text-gray-500">
+                    <div className="px-4 py-3 border-t border-[#241047] text-xs font-semibold text-slate-400 bg-[#10061f]">
                         Showing {attendees.length} of {total} registrations
                     </div>
                 </div>
