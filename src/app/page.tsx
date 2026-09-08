@@ -15,6 +15,8 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Badge from "@/components/ui/Badge";
 
+import VistaLogo from "@/components/VistaLogo";
+
 type FormData = {
   first_name: string;
   last_name: string | undefined;
@@ -117,20 +119,29 @@ export default function RegistrationPage() {
   return (
     <div className="min-h-screen bg-[#0c0516] text-slate-100 selection:bg-amber-500 selection:text-black">
       {/* Header / Navbar */}
-      <header className="border-b border-[#241047] bg-[#0c0516]/90 backdrop-blur-md sticky top-0 z-30 sticky-safe">
-        <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-extrabold shadow-sm">
-              <Ticket className="w-5 h-5 text-slate-950" />
+      <header className="border-b border-[#291152] bg-[#0c0516]/95 backdrop-blur-md sticky top-0 z-30 sticky-safe shadow-xl">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3.5">
+            {/* Gold Icon badge */}
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center font-black shadow-md shadow-amber-500/20 border border-amber-300">
+              <Ticket className="w-5 h-5 text-slate-950 stroke-[2.5]" />
             </div>
-            <div>
-              <span className="font-black tracking-tight text-white text-base sm:text-lg block leading-tight">
-                NITTE&apos;S GOT <span className="text-amber-400">LATENT</span>
-              </span>
-              <span className="text-[10px] text-slate-400 font-medium block">{settings.collegeName} • {settings.department}</span>
+            <div className="flex items-center gap-3">
+              <div>
+                <span className="font-black tracking-tight text-white text-base sm:text-lg block leading-tight">
+                  NITTE&apos;S GOT <span className="text-amber-400 font-black">LATENT</span>
+                </span>
+                <span className="text-[10px] text-slate-300 font-semibold block tracking-wide">
+                  NMAMIT Nitte &bull; VISTA 2025
+                </span>
+              </div>
+              <div className="hidden sm:block h-7 w-[1px] bg-purple-800/60 mx-1" />
+              <div className="hidden sm:block">
+                <VistaLogo className="h-6 w-auto text-amber-400 drop-shadow-sm" />
+              </div>
             </div>
           </div>
-          <Button onClick={scrollToRegister} size="sm" variant="primary">
+          <Button onClick={scrollToRegister} size="sm" variant="primary" className="shadow-lg shadow-amber-500/10 py-2 px-4 text-xs sm:text-sm font-black tracking-wide">
             Get Ticket Pass
           </Button>
         </div>
@@ -250,16 +261,16 @@ export default function RegistrationPage() {
                 />
               </div>
 
-<Input
-                  label={settings.usnLabel}
-                  placeholder="e.g. 4NM22CS001"
-                  hint={settings.usnHint}
-                  error={errors.usn?.message}
-                  required={settings.usnRequired}
-                  autoComplete="off"
-                  autoCapitalize="characters"
-                  {...register("usn")}
-                />
+              <Input
+                label={settings.usnLabel}
+                placeholder="e.g. 4NM22CS001"
+                hint={settings.usnHint}
+                error={errors.usn?.message}
+                required={settings.usnRequired}
+                autoComplete="off"
+                autoCapitalize="characters"
+                {...register("usn")}
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">

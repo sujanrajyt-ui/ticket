@@ -7,6 +7,8 @@ import { generateQRDataURL, downloadQRCode } from "@/lib/qr";
 import { useEventConfig } from "@/components/EventConfigProvider";
 import Button from "@/components/ui/Button";
 
+import VistaLogo from "@/components/VistaLogo";
+
 interface AttendeeInfo {
     first_name: string;
     last_name: string;
@@ -149,22 +151,27 @@ export default function SuccessPage() {
                 {/* ── TICKET PASS CARD ── */}
                 <div className="bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl overflow-hidden shadow-2xl relative">
                     {/* Top Pass Header */}
-                    <div className="bg-gradient-to-b from-[#210c42] to-[#170830] p-6 border-b border-[#301459] text-center space-y-2">
+                    <div className="bg-gradient-to-b from-[#240e47] to-[#170830] p-6 border-b border-[#301459] space-y-3">
                         <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
                                 OFFICIAL ADMIT PASS
                             </span>
-                            <span className="font-mono text-xs font-bold text-slate-400 tracking-wider">
+                            <span className="font-mono text-xs font-extrabold text-slate-300 tracking-wider">
                                 #{attendee.registration_id}
                             </span>
                         </div>
 
-                        <div className="pt-2">
-                            <h2 className="text-2xl font-black text-amber-400 tracking-tight">
-                                NITTE&apos;S GOT <span className="text-white">LATENT</span>
-                            </h2>
-                            <p className="text-xs text-slate-300 font-semibold">{settings.collegeName}</p>
-                            <p className="text-[11px] text-amber-400/80 font-medium">{settings.department}</p>
+                        <div className="flex items-center justify-between pt-1">
+                            <div>
+                                <h2 className="text-2xl font-black text-amber-400 tracking-tight">
+                                    NITTE&apos;S GOT <span className="text-white">LATENT</span>
+                                </h2>
+                                <p className="text-xs text-slate-300 font-semibold">{settings.collegeName}</p>
+                                <p className="text-[11px] text-amber-400/90 font-medium">{settings.department} &bull; VISTA 2025</p>
+                            </div>
+                            <div className="pl-2 border-l border-purple-800/50">
+                                <VistaLogo className="h-7 w-auto text-amber-400 drop-shadow-md" />
+                            </div>
                         </div>
                     </div>
 
