@@ -15,8 +15,6 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Badge from "@/components/ui/Badge";
 
-import VistaLogo from "@/components/VistaLogo";
-
 type FormData = {
   first_name: string;
   last_name: string | undefined;
@@ -118,35 +116,6 @@ export default function RegistrationPage() {
 
   return (
     <div className="min-h-screen bg-[#0c0516] text-slate-100 selection:bg-amber-500 selection:text-black">
-      {/* Header / Navbar */}
-      <header className="border-b border-[#291152] bg-[#0c0516]/95 backdrop-blur-md sticky top-0 z-30 sticky-safe shadow-xl">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
-            {/* Gold Icon badge */}
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center font-black shadow-md shadow-amber-500/20 border border-amber-300">
-              <Ticket className="w-5 h-5 text-slate-950 stroke-[2.5]" />
-            </div>
-            <div className="flex items-center gap-3">
-              <div>
-                <span className="font-black tracking-tight text-white text-base sm:text-lg block leading-tight">
-                  NITTE&apos;S GOT <span className="text-amber-400 font-black">LATENT</span>
-                </span>
-                <span className="text-[10px] text-slate-300 font-semibold block tracking-wide">
-                  NMAMIT Nitte &bull; VISTA 2025
-                </span>
-              </div>
-              <div className="hidden sm:block h-7 w-[1px] bg-purple-800/60 mx-1" />
-              <div className="hidden sm:block">
-                <VistaLogo className="h-6 w-auto text-amber-400 drop-shadow-sm" />
-              </div>
-            </div>
-          </div>
-          <Button onClick={scrollToRegister} size="sm" variant="primary" className="shadow-lg shadow-amber-500/10 py-2 px-4 text-xs sm:text-sm font-black tracking-wide">
-            Get Ticket Pass
-          </Button>
-        </div>
-      </header>
-
       {/* HERO SECTION */}
       <section className="relative pt-8 pb-16 px-4 overflow-hidden">
         {/* Subtle curtain backdrop highlight */}

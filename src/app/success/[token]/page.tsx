@@ -7,8 +7,6 @@ import { generateQRDataURL, downloadQRCode } from "@/lib/qr";
 import { useEventConfig } from "@/components/EventConfigProvider";
 import Button from "@/components/ui/Button";
 
-import VistaLogo from "@/components/VistaLogo";
-
 interface AttendeeInfo {
     first_name: string;
     last_name: string;
@@ -161,17 +159,12 @@ export default function SuccessPage() {
                             </span>
                         </div>
 
-                        <div className="flex items-center justify-between pt-1">
-                            <div>
-                                <h2 className="text-2xl font-black text-amber-400 tracking-tight">
-                                    NITTE&apos;S GOT <span className="text-white">LATENT</span>
-                                </h2>
-                                <p className="text-xs text-slate-300 font-semibold">{settings.collegeName}</p>
-                                <p className="text-[11px] text-amber-400/90 font-medium">{settings.department} &bull; VISTA 2025</p>
-                            </div>
-                            <div className="pl-2 border-l border-purple-800/50">
-                                <VistaLogo className="h-7 w-auto text-amber-400 drop-shadow-md" />
-                            </div>
+                        <div className="pt-2 text-center">
+                            <h2 className="text-2xl font-black text-amber-400 tracking-tight">
+                                NITTE&apos;S GOT <span className="text-white">LATENT</span>
+                            </h2>
+                            <p className="text-xs text-slate-300 font-semibold">{settings.collegeName}</p>
+                            <p className="text-[11px] text-amber-400/90 font-medium">{settings.department}</p>
                         </div>
                     </div>
 
