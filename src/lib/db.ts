@@ -251,6 +251,7 @@ export async function checkInAttendee(rawToken: string): Promise<{ success: bool
 
     const cleanToken = token.toLowerCase();
 
+    // Check mock store if in mock mode or present in mock array
     const mockMatch = mockAttendees.find(
         (a) =>
             a.qr_token.toLowerCase() === cleanToken ||
@@ -258,7 +259,7 @@ export async function checkInAttendee(rawToken: string): Promise<{ success: bool
             (a.usn && a.usn.toLowerCase() === cleanToken)
     );
 
-    if (mockMatch || isMockMode()) {
+    if (isMockMode() || (mockMatch && mockMatch.id.startsWith("mock-"))) {
         if (!mockMatch) return { success: false, message: "INVALID_TOKEN" };
         if (mockMatch.checked_in) return { success: false, message: "ALREADY_CHECKED_IN", attendee: mockMatch };
 
@@ -270,24 +271,7 @@ export async function checkInAttendee(rawToken: string): Promise<{ success: bool
     try {
         const supabase = await createAdminClient();
 
-        // 1. Try Supabase RPC check_in_attendee first
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data, error } = await (supabase as any).rpc("check_in_attendee", { p_token: token });
-
-            if (!error && data) {
-                const res = data as unknown as { success: boolean; message: string; attendee_data?: Attendee };
-                if (res.success || res.message === "ALREADY_CHECKED_IN") {
-                    return {
-                        success: res.success || false,
-                        message: res.message || "SUCCESS",
-                        attendee: res.attendee_data,
-                    };
-                }
-            }
-        } catch { /* proceed to direct fallback */ }
-
-        // 2. Direct Supabase Query Fallback (Fail-proof!)
+        // Direct Query to find attendee
         const { data: rawAttendee } = await supabase
             .from("attendees")
             .select("*")

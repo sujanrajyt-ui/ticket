@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { Attendee } from "@/types/database";
-import { deleteAttendee } from "@/lib/db";
+import { lookupAttendee, deleteAttendee } from "@/lib/db";
 
 export async function GET(
     request: NextRequest,
@@ -9,20 +7,13 @@ export async function GET(
 ) {
     try {
         const { id } = await params;
-        const adminClient = await createAdminClient();
-        const { data: rawData, error } = await adminClient
-            .from("attendees")
-            .select("*")
-            .or(`registration_id.eq.${id},id.eq.${id},qr_token.eq.${id}`)
-            .maybeSingle();
+        const attendee = await lookupAttendee(id);
 
-        const data = rawData as unknown as Attendee | null;
-
-        if (error || !data) {
+        if (!attendee) {
             return NextResponse.json({ error: "Attendee not found." }, { status: 404 });
         }
 
-        return NextResponse.json({ attendee: data });
+        return NextResponse.json({ attendee });
     } catch {
         return NextResponse.json({ error: "Internal server error." }, { status: 500 });
     }

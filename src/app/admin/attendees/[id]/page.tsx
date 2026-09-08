@@ -172,7 +172,9 @@ export default function AttendeeDetailPage() {
                         { icon: User, label: "Name", value: fullName },
                         { icon: Mail, label: "Email", value: attendee.email },
                         { icon: Phone, label: "Phone", value: `+91 ${attendee.phone}` },
-                        { icon: IdCard, label: "USN", value: attendee.usn || "Not provided" },
+                        { icon: IdCard, label: "USN / Student ID", value: attendee.usn || "Not provided" },
+                        { icon: IdCard, label: "Branch", value: attendee.branch || "Computer Science & Engg (CSE)" },
+                        { icon: Clock, label: "Academic Year", value: attendee.year || "3rd Year" },
                         { icon: Clock, label: "Registered At", value: createdAt },
                     ].map(({ icon: Icon, label, value }) => (
                         <div key={label} className="flex items-center gap-3">
