@@ -115,10 +115,12 @@ export default function ScannerPage() {
 
     useEffect(() => {
         if (state === "scanning" && !cameraError) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             startCamera();
         }
         return () => { stopCamera(); };
-    }, []); // eslint-disable-line
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleCheckIn = async () => {
         if (!currentToken || !scanResult) return;

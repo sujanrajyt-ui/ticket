@@ -1,29 +1,28 @@
 # College Event Registration & QR Check-in System
 
-A production-ready private registration and QR check-in web application built with **Next.js 14+ (App Router)**, **TypeScript**, **Tailwind CSS**, and **Supabase**.
-
-Designed specifically for college events, symposiums, technical fests, and workshops.
+A private registration and QR check-in web application built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, and **Supabase**. Built for college events and technical fests.
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-- **Attendee Registration**: Clean, mobile-first registration form with India `+91` phone selector and USN validation.
-- **Instant QR Code Generation**: Generates a high-resolution, downloadable QR code right after registration.
-- **Secure QR Encoding**: Contains only a secure, randomly generated token URL (`/checkin/TOKEN`). **No PII** (Email, Phone, USN) is stored in the QR code.
-- **Mobile QR Scanner**: Browser-based scanner using `html5-qrcode` that works directly in mobile browsers (iOS & Android) without downloading any app.
+- **Attendee Registration**: Mobile-first registration form with India `+91` phone selector and USN validation.
+- **Instant QR Code Generation**: Generates a downloadable QR code right after registration.
+- **Secure QR Encoding**: Contains only a secure, randomly generated token URL (`/checkin/TOKEN`). No PII (Email, Phone, USN) is stored in the QR code.
+- **Mobile QR Scanner**: Browser-based scanner using `html5-qrcode` that works on iOS & Android without an app.
 - **Atomic Check-in & Concurrency**: Uses Postgres `FOR UPDATE` row locking to prevent duplicate check-ins across multiple scanners operating simultaneously.
 - **Color-Coded Scanning Feedback**:
-  - 🟢 **VALID REGISTRATION** — Displays attendee name, USN, and a prominent "CHECK IN" button.
-  - 🟢 **CHECK-IN SUCCESSFUL** — Displays recorded timestamp (e.g., Entry recorded at 10:42 PM).
-  - 🟠 **ALREADY CHECKED IN** — Displays original check-in time and blocks duplicate check-ins.
-  - 🔴 **INVALID QR** — Displays registration not found warning without leaking database info.
+  - **VALID REGISTRATION** — Displays attendee name, USN, and a prominent "CHECK IN" button.
+  - **CHECK-IN SUCCESSFUL** — Displays recorded timestamp.
+  - **ALREADY CHECKED IN** — Displays original check-in time and blocks duplicate check-ins.
+  - **INVALID QR** — Displays registration not found warning without leaking database info.
 - **Role-Based Access Control**:
-  - **Admin**: Full access to dashboard stats, search, filters, manual check-in, undo check-in, and CSV export.
-  - **Volunteer**: Restricted access to QR scanner and minimal attendee details required for verification.
-- **Manual Check-In**: Search and manually check in attendees with confirmation dialogs if QR cannot be scanned.
-- **CSV Export**: Stream full registration data for post-event reporting.
-- **Central Event Configuration**: Easily customize all event details, dates, venues, colors, and regex rules in `src/config/event.ts`.
+  - **Admin**: Dashboard stats, search, filters, manual check-in, undo check-in, CSV export, and event info editing.
+  - **Volunteer**: QR scanner and minimal attendee details required for verification.
+- **Event Info Editor**: Edit event name, dates, venue, and contact info from the admin console at `/admin/settings`. Changes apply instantly to the public pages and ticket pass.
+- **Manual Check-In**: Search and check in attendees if the QR cannot be scanned.
+- **CSV Export**: Export registration data as CSV.
+- **Central Event Configuration**: Set defaults for event details, dates, venues, and regex rules in `src/config/event.ts`.
 
 ---
 
@@ -40,6 +39,7 @@ Designed specifically for college events, symposiums, technical fests, and works
 │   │   ├── admin/
 │   │   │   ├── page.tsx                 # Admin dashboard with stats & table
 │   │   │   ├── login/page.tsx           # Admin/Volunteer login page
+│   │   │   ├── settings/page.tsx        # Event info editor
 │   │   │   ├── scan/page.tsx            # Camera QR scanner
 │   │   │   └── attendees/[id]/page.tsx  # Individual attendee details
 │   │   └── api/
@@ -49,22 +49,26 @@ Designed specifically for college events, symposiums, technical fests, and works
 │   │       ├── attendees/route.ts       # Attendee search & filter API
 │   │       ├── attendees/[id]/route.ts  # Attendee detail API
 │   │       ├── export/route.ts          # CSV export endpoint
-│   │       └── lookup/route.ts          # Token lookup API for scanner preview
+│   │       ├── lookup/route.ts          # Token lookup API for scanner preview
+│   │       └── admin/event-config/route.ts # Event settings read/update (Admin only)
 │   ├── components/                      # Reusable UI components
 │   │   ├── ui/                          # Button, Badge, Input, Modal
-│   │   └── admin/                       # StatsCard
+│   │   ├── admin/                       # StatsCard
+│   │   └── EventConfigProvider.tsx      # Live event settings for client pages
 │   ├── config/
-│   │   └── event.ts                     # Central event settings & customization
+│   │   └── event.ts                     # Central event default settings
 │   ├── lib/
 │   │   ├── qr.ts                        # QR code generation & download helpers
+│   │   ├── event-config.ts              # Server-side event settings reader
 │   │   ├── utils.ts                     # Tailwind class merge helper
-│   │   └── supabase/                    # Browser, server, and middleware clients
-│   ├── middleware.ts                    # Admin route protection
+│   │   └── supabase/                    # Browser, server, and proxy clients
+│   ├── proxy.ts                         # Admin route protection
 │   └── types/
 │       └── database.ts                  # Supabase TypeScript interfaces
 └── supabase/
     └── migrations/
-        └── 001_initial_schema.sql       # Database schema, function & RLS policies
+        ├── 001_initial_schema.sql       # Tables, function & RLS policies
+        └── 002_event_settings.sql       # Event info editor storage
 ```
 
 ---
@@ -83,10 +87,12 @@ Designed specifically for college events, symposiums, technical fests, and works
 1. Go to your Supabase Dashboard -> **SQL Editor**.
 2. Click **New Query**.
 3. Copy the contents of `supabase/migrations/001_initial_schema.sql` into the SQL Editor and click **Run**.
+4. Repeat with `supabase/migrations/002_event_settings.sql`.
 
 This creates:
 - `attendees` table with indexes and unique constraints
 - `profiles` table linked to `auth.users`
+- `event_config` table used by the event info editor
 - `check_in_attendee()` Postgres function with `FOR UPDATE` lock for atomic check-ins
 - Row Level Security (RLS) policies
 
@@ -135,7 +141,7 @@ VALUES ('<VOLUNTEER_USER_UUID_FROM_AUTH_USERS>', 'volunteer');
 
 ### 5. Customizing Event Details
 
-Edit `src/config/event.ts` to update event details without modifying application code:
+Set default event details in `src/config/event.ts` (name, dates, venue, USN regex, branches):
 
 ```typescript
 export const EVENT_CONFIG = {
@@ -150,6 +156,8 @@ export const EVENT_CONFIG = {
   usnRegex: /^[1-9][A-Z]{2}\d{2}[A-Z]{2}\d{3}$/i, // USN pattern validation
 };
 ```
+
+Admins can also edit name, tagline, description, date, time, venue, college name, department, and contact email at runtime from **Event Info Editor** (`/admin/settings`). Edits are stored in the `event_config` table and apply instantly.
 
 ---
 

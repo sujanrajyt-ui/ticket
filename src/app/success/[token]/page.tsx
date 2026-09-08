@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Download, Share2, Printer, CheckCircle2, Ticket, MapPin, Calendar, Clock, Sparkles } from "lucide-react";
+import { Download, Share2, Printer, CheckCircle2, MapPin, Calendar } from "lucide-react";
 import { generateQRDataURL, downloadQRCode } from "@/lib/qr";
-import { EVENT_CONFIG } from "@/config/event";
+import { useEventConfig } from "@/components/EventConfigProvider";
 import Button from "@/components/ui/Button";
 
 interface AttendeeInfo {
@@ -22,6 +22,7 @@ interface AttendeeInfo {
 export default function SuccessPage() {
     const params = useParams<{ token: string }>();
     const router = useRouter();
+    const { settings } = useEventConfig();
     const [qrDataUrl, setQrDataUrl] = useState<string>("");
     const [attendee, setAttendee] = useState<AttendeeInfo | null>(null);
     const [loading, setLoading] = useState(true);
@@ -29,50 +30,58 @@ export default function SuccessPage() {
     const [copied, setCopied] = useState(false);
 
     useEffect(() => {
-        const token = params.token;
-        if (!token) {
-            setError("Invalid ticket link.");
-            setLoading(false);
-            return;
-        }
+        let cancelled = false;
 
-        const stored = sessionStorage.getItem(`reg_${token}`);
-        if (stored) {
-            try {
-                const data = JSON.parse(stored);
-                setAttendee(data);
-            } catch {
-                /* load from lookup API fallback */
-            }
-        }
-
-        fetch(`/api/lookup?token=${encodeURIComponent(token)}`)
-            .then((r) => r.json())
-            .then((res) => {
-                if (res.found) {
-                    setAttendee((prev) => ({
-                        first_name: res.name.split(" ")[0] || "Attendee",
-                        last_name: res.name.split(" ").slice(1).join(" ") || "",
-                        usn: res.usn,
-                        registration_id: res.registration_id,
-                        email: prev?.email || "registered@nitte.edu.in",
-                        phone: prev?.phone || "9876543210",
-                        branch: prev?.branch || "Computer Science & Engg",
-                        year: prev?.year || "3rd Year",
-                        created_at: prev?.created_at || new Date().toISOString(),
-                    }));
-                } else if (!stored) {
-                    setError("Ticket details not found.");
+        (async () => {
+            const token = params.token;
+            const stored = sessionStorage.getItem(`reg_${token}`);
+            let storedData: AttendeeInfo | null = null;
+            if (stored) {
+                try {
+                    storedData = JSON.parse(stored);
+                } catch {
+                    /* load from lookup API fallback */
                 }
-            })
-            .catch(() => {
-                if (!stored) setError("Network error loading ticket.");
-            })
-            .finally(() => {
-                generateQRDataURL(token)
-                    .then(setQrDataUrl)
-                    .finally(() => setLoading(false));
-            });
+            }
+
+            let json: { found?: boolean; name?: string; usn?: string; registration_id?: string } | null = null;
+            try {
+                const res = await fetch(`/api/lookup?token=${encodeURIComponent(token)}`);
+                json = await res.json();
+            } catch {
+                if (!storedData) setError("Network error loading ticket.");
+            }
+
+            if (cancelled) return;
+
+            if (storedData) setAttendee(storedData);
+
+            if (json?.found) {
+                setAttendee((prev) => ({
+                    first_name: json!.name!.split(" ")[0] || "Attendee",
+                    last_name: json!.name!.split(" ").slice(1).join(" ") || "",
+                    usn: json?.usn || "",
+                    registration_id: json?.registration_id || "",
+                    email: prev?.email || "registered@nitte.edu.in",
+                    phone: prev?.phone || "9876543210",
+                    branch: prev?.branch || "Computer Science & Engg",
+                    year: prev?.year || "3rd Year",
+                    created_at: prev?.created_at || new Date().toISOString(),
+                }));
+            } else if (json && !storedData) {
+                setError("Ticket details not found.");
+            }
+
+            generateQRDataURL(token)
+                .then((url) => {
+                    if (!cancelled) setQrDataUrl(url);
+                })
+                .finally(() => {
+                    if (!cancelled) setLoading(false);
+                });
+        })();
+
+        return () => { cancelled = true; };
     }, [params.token]);
 
     const handleDownload = () => {
@@ -85,8 +94,8 @@ export default function SuccessPage() {
         if (navigator.share && attendee) {
             try {
                 await navigator.share({
-                    title: `${EVENT_CONFIG.name} Entry Pass`,
-                    text: `Official Ticket Pass for ${attendee.first_name} (${attendee.registration_id}) - ${EVENT_CONFIG.name}`,
+                    title: `${settings.name} Entry Pass`,
+                    text: `Official Ticket Pass for ${attendee.first_name} (${attendee.registration_id}) - ${settings.name}`,
                     url: window.location.href,
                 });
             } catch { /* cancelled */ }
@@ -152,10 +161,10 @@ export default function SuccessPage() {
 
                         <div className="pt-2">
                             <h2 className="text-2xl font-black text-amber-400 tracking-tight">
-                                NITTE'S GOT <span className="text-white">LATENT</span>
+                                NITTE&apos;S GOT <span className="text-white">LATENT</span>
                             </h2>
-                            <p className="text-xs text-slate-300 font-semibold">{EVENT_CONFIG.collegeName}</p>
-                            <p className="text-[11px] text-amber-400/80 font-medium">VISTA 2025</p>
+                            <p className="text-xs text-slate-300 font-semibold">{settings.collegeName}</p>
+                            <p className="text-[11px] text-amber-400/80 font-medium">{settings.department}</p>
                         </div>
                     </div>
 
@@ -211,11 +220,11 @@ export default function SuccessPage() {
                         <div className="bg-[#120721] border border-[#2b144e] rounded-xl p-3.5 flex items-center justify-between text-xs text-slate-300">
                             <div className="flex items-center gap-2">
                                 <Calendar className="w-4 h-4 text-amber-400" />
-                                <span>{EVENT_CONFIG.date}</span>
+                                <span>{settings.date}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <MapPin className="w-4 h-4 text-amber-400" />
-                                <span>Sadananda Auditorium</span>
+                                <span>{settings.venue}</span>
                             </div>
                         </div>
                     </div>

@@ -1,14 +1,15 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Ticket } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { EVENT_CONFIG } from "@/config/event";
+import { useEventConfig } from "@/components/EventConfigProvider";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
 export default function AdminLoginPage() {
     const router = useRouter();
+    const { settings } = useEventConfig();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -42,7 +43,7 @@ export default function AdminLoginPage() {
                         <ShieldCheck className="w-6 h-6" />
                     </div>
                     <h1 className="text-xl font-extrabold text-white">Organizer Portal</h1>
-                    <p className="text-xs text-slate-400">{EVENT_CONFIG.name} Check-in Management</p>
+                    <p className="text-xs text-slate-400">{settings.name} Check-in Management</p>
                 </div>
 
                 {error && (

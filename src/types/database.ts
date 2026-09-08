@@ -27,6 +27,12 @@ export interface Profile {
     role: "admin" | "volunteer";
 }
 
+export interface EventConfigRow {
+    id: boolean;
+    settings: { [key: string]: Json | undefined } | null;
+    updated_at: string;
+}
+
 export interface Database {
     public: {
         Tables: {
@@ -68,6 +74,20 @@ export interface Database {
                 Row: Profile;
                 Insert: Profile;
                 Update: Partial<Profile>;
+                Relationships: [];
+            };
+            event_config: {
+                Row: EventConfigRow;
+                Insert: {
+                    id?: boolean;
+                    settings?: { [key: string]: Json | undefined } | null;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: boolean;
+                    settings?: { [key: string]: Json | undefined } | null;
+                    updated_at?: string;
+                };
                 Relationships: [];
             };
         };

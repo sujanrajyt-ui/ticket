@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { CalendarDays, CheckCircle2, Clock, Hash, IdCard, Mail, Phone, User, XCircle } from "lucide-react";
-import { EVENT_CONFIG } from "@/config/event";
+import { getEventSettingsServer } from "@/lib/event-config";
 import { format } from "date-fns";
 
 import { Attendee } from "@/types/database";
@@ -13,6 +13,7 @@ export default async function RegistrationViewPage({
 }) {
     const { id } = await params;
     const supabase = await createAdminClient();
+    const settings = await getEventSettingsServer();
 
     const { data: rawAttendee, error } = await supabase
         .from("attendees")
@@ -35,7 +36,7 @@ export default async function RegistrationViewPage({
             <div className="max-w-sm w-full space-y-4 animate-fade-in">
                 {/* Header */}
                 <div className="text-center">
-                    <p className="text-xs text-gray-500 uppercase tracking-widest">{EVENT_CONFIG.name}</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-widest">{settings.name}</p>
                     <h1 className="text-xl font-bold text-white mt-1">Registration Details</h1>
                 </div>
 
@@ -92,7 +93,7 @@ export default async function RegistrationViewPage({
                     )}
                 </div>
 
-                <p className="text-center text-xs text-gray-600">{EVENT_CONFIG.name} · {EVENT_CONFIG.date}</p>
+                <p className="text-center text-xs text-gray-600">{settings.name} · {settings.date}</p>
             </div>
         </main>
     );

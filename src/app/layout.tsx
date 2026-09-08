@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { EVENT_CONFIG } from "@/config/event";
+import EventConfigProvider from "@/components/EventConfigProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -18,7 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-gray-950 text-white antialiased">
-        {children}
+        <EventConfigProvider>{children}</EventConfigProvider>
       </body>
     </html>
   );

@@ -7,10 +7,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Calendar, Clock, MapPin, Sparkles, CheckCircle2, Ticket,
-  QrCode, ShieldCheck, ArrowRight, Building2, User, Mail, Phone, Hash, Award, HelpCircle
+  Calendar, Clock, MapPin, Sparkles, CheckCircle2, Ticket, ArrowRight, Award
 } from "lucide-react";
 import { EVENT_CONFIG } from "@/config/event";
+import { useEventConfig } from "@/components/EventConfigProvider";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Badge from "@/components/ui/Badge";
@@ -31,6 +31,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function RegistrationPage() {
   const router = useRouter();
+  const { settings } = useEventConfig();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -99,7 +100,7 @@ export default function RegistrationPage() {
             </div>
             <div>
               <span className="font-black tracking-tight text-white text-base sm:text-lg block leading-tight">
-                NITTE'S GOT <span className="text-amber-400">LATENT</span>
+                NITTE&apos;S GOT <span className="text-amber-400">LATENT</span>
               </span>
               <span className="text-[10px] text-slate-400 font-medium block">NMAMIT Nitte • VISTA 2025</span>
             </div>
@@ -136,11 +137,11 @@ export default function RegistrationPage() {
             </div>
 
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-tight">
-              SHOWCASE YOUR TALENT ON THE <span className="text-amber-400">ULTIMATE STAGE</span>
+              SHOWCASE YOUR TALENT ON <span className="text-amber-400">STAGE</span>
             </h1>
 
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-              The premier stage event of NMAM Institute of Technology, Nitte. Join us at Sadananda Auditorium for an electrifying showcase of talent. Claim your official digital entry pass below!
+              The stage event of {settings.collegeName}. Join us at {settings.venue} to claim your official digital entry pass below.
             </p>
           </div>
 
@@ -152,7 +153,7 @@ export default function RegistrationPage() {
               </div>
               <div>
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Event Date</p>
-                <p className="text-sm font-extrabold text-white">{EVENT_CONFIG.date}</p>
+                <p className="text-sm font-extrabold text-white">{settings.date}</p>
               </div>
             </div>
 
@@ -162,7 +163,7 @@ export default function RegistrationPage() {
               </div>
               <div>
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Timings</p>
-                <p className="text-sm font-extrabold text-white">{EVENT_CONFIG.time}</p>
+                <p className="text-sm font-extrabold text-white">{settings.time}</p>
               </div>
             </div>
 
@@ -172,7 +173,7 @@ export default function RegistrationPage() {
               </div>
               <div>
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Venue</p>
-                <p className="text-sm font-extrabold text-white truncate">Sadananda Auditorium</p>
+                <p className="text-sm font-extrabold text-white truncate">{settings.venue}</p>
               </div>
             </div>
           </div>
@@ -191,10 +192,10 @@ export default function RegistrationPage() {
           <div className="space-y-4">
             <Badge variant="gold">ABOUT THE EVENT</Badge>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              WHAT IS <span className="text-amber-400">NITTE'S GOT LATENT?</span>
+              WHAT IS <span className="text-amber-400">NITTE&apos;S GOT LATENT?</span>
             </h2>
             <p className="text-slate-300 text-sm leading-relaxed">
-              NITTE'S GOT LATENT is the premier talent competition organized as part of VISTA 2025 at NMAMIT Nitte. Designed to discover and celebrate unique stage performances, comedy, music, drama, and extraordinary skills among college students.
+              NITTE&apos;S GOT LATENT is the talent competition organized as part of {settings.department} at {settings.collegeName}. Students compete in stage performance, music, and comedy.
             </p>
             <ul className="space-y-2.5 text-xs sm:text-sm text-slate-300 pt-2">
               <li className="flex items-center gap-2.5">
@@ -203,11 +204,11 @@ export default function RegistrationPage() {
               </li>
               <li className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span>Instant QR ticket check-in at Sadananda Auditorium</span>
+                <span>Instant QR ticket check-in at {settings.venue}</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span>Open for all NMAMIT students & registered attendees</span>
+                <span>Open to {settings.collegeName} students and registered attendees</span>
               </li>
             </ul>
           </div>
@@ -223,7 +224,7 @@ export default function RegistrationPage() {
               </div>
               <div className="p-3 rounded-xl bg-[#1b0d36] border border-[#341663]">
                 <p className="font-bold text-white mb-0.5">Seating & Timings</p>
-                <p className="text-slate-400">Gates open at 04:30 PM. Please be seated in Sadananda Auditorium by 04:45 PM.</p>
+                <p className="text-slate-400">Gates open at 04:30 PM. Please be seated at {settings.venue} by 04:45 PM.</p>
               </div>
               <div className="p-3 rounded-xl bg-[#1b0d36] border border-[#341663]">
                 <p className="font-bold text-white mb-0.5">Student ID Requirement</p>
@@ -346,7 +347,7 @@ export default function RegistrationPage() {
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center space-y-2">
             <h2 className="text-xl sm:text-2xl font-extrabold text-white">HOW IT WORKS</h2>
-            <p className="text-slate-400 text-xs sm:text-sm">3 simple steps to get inside Sadananda Auditorium</p>
+            <p className="text-slate-400 text-xs sm:text-sm">3 steps to get inside {settings.venue}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -379,9 +380,9 @@ export default function RegistrationPage() {
 
       {/* FOOTER */}
       <footer className="border-t border-[#231045] bg-[#0a0412] py-8 text-center text-xs text-slate-500 space-y-2">
-        <p className="font-bold text-slate-400">NITTE'S GOT LATENT • VISTA 2025</p>
-        <p>NMAM Institute of Technology, Nitte, Karkala, Karnataka</p>
-        <p className="text-[11px] text-slate-600">Need help? Email <a href="mailto:latent@nitte.edu.in" className="text-amber-400 hover:underline">latent@nitte.edu.in</a></p>
+        <p className="font-bold text-slate-400">{settings.name} • {settings.department}</p>
+        <p>{settings.collegeName}, Karkala, Karnataka</p>
+        <p className="text-[11px] text-slate-600">Need help? Email <a href={`mailto:${settings.contactEmail}`} className="text-amber-400 hover:underline">{settings.contactEmail}</a></p>
       </footer>
     </div>
   );

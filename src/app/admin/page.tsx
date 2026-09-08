@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
     Users, CheckCircle2, Clock, BarChart3, Search, Download,
-    QrCode, LogOut, ChevronRight, SlidersHorizontal, RefreshCw, Ticket
+    QrCode, LogOut, ChevronRight, SlidersHorizontal, RefreshCw, Ticket, Settings
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Attendee } from "@/types/database";
-import { EVENT_CONFIG } from "@/config/event";
+import { useEventConfig } from "@/components/EventConfigProvider";
 import StatsCard from "@/components/admin/StatsCard";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -23,6 +23,7 @@ const FILTER_LABELS: Record<Filter, string> = {
 
 export default function AdminDashboard() {
     const router = useRouter();
+    const { settings } = useEventConfig();
     const [attendees, setAttendees] = useState<Attendee[]>([]);
     const [total, setTotal] = useState(0);
     const [checkedIn, setCheckedIn] = useState(0);
@@ -33,7 +34,6 @@ export default function AdminDashboard() {
     const [userRole, setUserRole] = useState<"admin" | "volunteer" | null>("admin");
 
     const fetchData = useCallback(async () => {
-        setLoading(true);
         try {
             const params = new URLSearchParams({ search, filter });
             const res = await fetch(`/api/attendees?${params}`);
@@ -46,6 +46,7 @@ export default function AdminDashboard() {
     }, [search, filter, router]);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchData();
     }, [fetchData]);
 
@@ -92,7 +93,7 @@ export default function AdminDashboard() {
                             <Ticket className="w-4 h-4 text-slate-950" />
                         </div>
                         <div className="min-w-0">
-                            <h1 className="text-sm font-black text-amber-400 truncate">{EVENT_CONFIG.name}</h1>
+                            <h1 className="text-sm font-black text-amber-400 truncate">{settings.name}</h1>
                             <p className="text-xs text-slate-400 hidden sm:block font-medium">Organizer Management Console</p>
                         </div>
                     </div>
@@ -100,6 +101,9 @@ export default function AdminDashboard() {
                         <Button onClick={() => router.push("/admin/scan")} variant="primary" size="sm">
                             <QrCode className="w-4 h-4" />
                             <span className="hidden sm:inline">QR Kiosk Scanner</span>
+                        </Button>
+                        <Button onClick={() => router.push("/admin/settings")} variant="secondary" size="sm">
+                            <Settings className="w-4 h-4" />
                         </Button>
                         <Button onClick={handleLogout} variant="ghost" size="sm">
                             <LogOut className="w-4 h-4" />
@@ -144,7 +148,7 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
-                        <Button onClick={fetchData} variant="secondary" size="sm">
+                        <Button onClick={() => { setLoading(true); fetchData(); }} variant="secondary" size="sm">
                             <RefreshCw className="w-4 h-4" />
                         </Button>
                         {userRole === "admin" && (

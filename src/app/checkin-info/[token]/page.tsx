@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { CheckCircle2, Clock, IdCard, QrCode } from "lucide-react";
-import { EVENT_CONFIG } from "@/config/event";
+import { getEventSettingsServer } from "@/lib/event-config";
 
 export default async function CheckInInfoPage({
     params,
@@ -10,6 +10,7 @@ export default async function CheckInInfoPage({
 }) {
     const { token } = await params;
     const supabase = await createAdminClient();
+    const settings = await getEventSettingsServer();
 
     const { data: rawAttendee } = await supabase
         .from("attendees")
@@ -33,7 +34,7 @@ export default async function CheckInInfoPage({
                 <div className="w-14 h-14 mx-auto bg-violet-950 border border-violet-800 rounded-2xl flex items-center justify-center">
                     <QrCode className="w-7 h-7 text-violet-400" />
                 </div>
-                <p className="text-xs text-gray-500 uppercase tracking-widest">{EVENT_CONFIG.name}</p>
+                <p className="text-xs text-gray-500 uppercase tracking-widest">{settings.name}</p>
                 <h1 className="text-xl font-bold text-white">
                     {attendee.first_name} {attendee.last_name}
                 </h1>
