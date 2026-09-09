@@ -73,11 +73,20 @@ export async function PUT(request: NextRequest) {
         const clean: Record<string, unknown> = {};
         for (const field of EVENT_SETTING_FIELDS) {
             const value = body?.[field.key];
-            if (field.type === "boolean") {
+            if (field.key === "maxTickets") {
+                clean[field.key] = typeof value === "number" ? value : (parseInt(String(value || "0"), 10) || 0);
+            } else if (field.type === "boolean") {
                 clean[field.key] = typeof value === "boolean" ? value : Boolean(value);
             } else {
                 clean[field.key] = typeof value === "string" ? value.trim() : "";
             }
+        }
+
+        if (typeof body?.logoUrl === "string") {
+            clean.logoUrl = body.logoUrl;
+        }
+        if (Array.isArray(body?.branches)) {
+            clean.branches = body.branches.filter((b: unknown) => typeof b === "string" && b.trim());
         }
 
         const adminClient = await createAdminClient();

@@ -77,7 +77,7 @@ export default function RegistrationPage() {
       email: "",
       phone: "",
       usn: "",
-      branch: EVENT_CONFIG.branches[0],
+      branch: settings.branches[0] || EVENT_CONFIG.branches[0],
       year: EVENT_CONFIG.years[2],
     },
   });
@@ -279,7 +279,7 @@ export default function RegistrationPage() {
                     {...register("branch")}
                     className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-base text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   >
-                    {EVENT_CONFIG.branches.map((b) => (
+                    {settings.branches.map((b) => (
                       <option key={b} value={b} className="bg-[#120721] text-white">{b}</option>
                     ))}
                   </select>

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { EVENT_CONFIG } from "@/config/event";
 import EventConfigProvider from "@/components/EventConfigProvider";
+import LogoOverlay from "@/components/LogoOverlay";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -32,7 +33,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-gray-950 text-white antialiased">
-        <EventConfigProvider>{children}</EventConfigProvider>
+        <EventConfigProvider>
+          <LogoOverlay />
+          {children}
+        </EventConfigProvider>
       </body>
     </html>
   );

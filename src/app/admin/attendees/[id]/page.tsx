@@ -19,6 +19,7 @@ export default function AttendeeDetailPage() {
     const [actionLoading, setActionLoading] = useState(false);
     const [actionMsg, setActionMsg] = useState<string | null>(null);
     const [userRole, setUserRole] = useState<"admin" | "volunteer" | null>(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     useEffect(() => {
         fetch("/api/admin/me")
@@ -102,8 +103,6 @@ export default function AttendeeDetailPage() {
     const checkedAt = attendee.checked_in_at
         ? format(new Date(attendee.checked_in_at), "dd MMM yyyy, h:mm a")
         : null;
-
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const handleDelete = async () => {
         if (!attendee) return;

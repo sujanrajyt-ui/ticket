@@ -14,15 +14,20 @@ export const EVENT_CONFIG = {
   checkDuplicatePhone: true,
   checkDuplicateUsn: true,
   branches: [
-    "Computer Science & Engg (CSE)",
-    "Information Science (ISE)",
-    "Electronics & Comm (ECE)",
-    "Electrical & Electronics (EEE)",
-    "Mechanical Engineering (ME)",
-    "Civil Engineering (CIV)",
-    "Artificial Intelligence & DS (AIDS)",
+    "Artificial Intelligence & Data Science (AI&DS)",
+    "Artificial Intelligence & Machine Learning (AI&ML)",
     "Biotechnology (BT)",
-    "Robotics & Automation (RA)",
+    "Civil Engineering (CIV)",
+    "Computer & Communication Engineering (CCE)",
+    "Computer Science & Engineering (CSE)",
+    "Computer Science (Cyber Security)",
+    "Electrical & Electronics Engineering (EEE)",
+    "Electronics & Communication Engineering (ECE)",
+    "Electronics & Communication – Advanced Communication Technology (ACT)",
+    "Electronics Engineering – VLSI Design & Technology",
+    "Information Science & Engineering (ISE)",
+    "Mechanical Engineering (ME)",
+    "Robotics & Artificial Intelligence (R&AI)",
     "Other",
   ],
   years: ["1st Year", "2nd Year", "3rd Year", "4th Year", "Postgraduate"],
@@ -43,6 +48,9 @@ export interface EventSettings {
   usnRegex: string;
   usnRequired: boolean;
   lastNameRequired: boolean;
+  maxTickets: number;
+  logoUrl: string;
+  branches: string[];
 }
 
 export interface EventSettingField {
@@ -50,6 +58,8 @@ export interface EventSettingField {
   label: string;
   type: "text" | "textarea" | "boolean";
   hint?: string;
+  /** Marks this field as rendered by a custom component (not the generic renderer). */
+  custom?: boolean;
 }
 
 export const EVENT_SETTING_FIELDS: EventSettingField[] = [
@@ -62,6 +72,12 @@ export const EVENT_SETTING_FIELDS: EventSettingField[] = [
   { key: "collegeName", label: "College Name", type: "text" },
   { key: "department", label: "Department / Fest", type: "text" },
   { key: "contactEmail", label: "Contact Email", type: "text" },
+  {
+    key: "maxTickets",
+    label: "Maximum Ticket Capacity",
+    type: "text",
+    hint: "Total maximum registrations allowed. Set to 0 for unlimited tickets.",
+  },
   {
     key: "usnLabel",
     label: "USN Field Label",
@@ -111,10 +127,17 @@ export const DEFAULT_EVENT_SETTINGS: EventSettings = {
   usnRegex: "",
   usnRequired: true,
   lastNameRequired: false,
+  maxTickets: 0,
+  logoUrl: "",
+  branches: EVENT_CONFIG.branches,
 };
 
 export function mergeEventSettings(stored?: Partial<EventSettings> | null): EventSettings {
-  return { ...DEFAULT_EVENT_SETTINGS, ...(stored || {}) };
+  const merged = { ...DEFAULT_EVENT_SETTINGS, ...(stored || {}) };
+  merged.maxTickets = typeof merged.maxTickets === "number" ? merged.maxTickets : (parseInt(String(merged.maxTickets || "0"), 10) || 0);
+  if (typeof merged.logoUrl !== "string") merged.logoUrl = "";
+  if (!Array.isArray(merged.branches) || merged.branches.length === 0) merged.branches = EVENT_CONFIG.branches;
+  return merged;
 }
 
 export function compileUSNRegex(pattern?: string): RegExp | null {
