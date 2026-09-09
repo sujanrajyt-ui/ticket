@@ -295,7 +295,7 @@ export default function RegistrationPage() {
 
               <div className="pt-2">
                 <Button type="submit" fullWidth size="lg" loading={isSubmitting} className="py-4 text-base">
-                  GENERATE MY ENTRY PASS <Ticket className="w-5 h-5 ml-1" />
+                  GET ENTRY PASS <Ticket className="w-5 h-5 ml-1" />
                 </Button>
               </div>
 
