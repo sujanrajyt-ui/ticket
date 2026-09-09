@@ -134,7 +134,7 @@ export const DEFAULT_EVENT_SETTINGS: EventSettings = {
   usnRegex: "",
   usnRequired: true,
   lastNameRequired: false,
-  maxTickets: 0,
+  maxTickets: 240,
   registrationClosed: false,
   logoUrl: "",
   branches: EVENT_CONFIG.branches,

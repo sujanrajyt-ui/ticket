@@ -222,9 +222,15 @@ export default function RegistrationPage() {
           </div>
 
           <div className="pt-4">
-            <Button onClick={scrollToRegister} size="lg" className="px-8 py-4 text-base">
-              REGISTER / GET YOUR TICKET <ArrowRight className="w-5 h-5 ml-1" />
-            </Button>
+            {eventStatus?.isClosed ? (
+              <Button onClick={scrollToRegister} size="lg" variant="secondary" className="px-8 py-4 text-base border-red-500/50 text-red-300 hover:text-white bg-red-950/40">
+                REGISTRATION CLOSED • MEET YOU ON 12TH SEPT <ArrowRight className="w-5 h-5 ml-1 text-red-400" />
+              </Button>
+            ) : (
+              <Button onClick={scrollToRegister} size="lg" className="px-8 py-4 text-base">
+                REGISTER / GET YOUR TICKET <ArrowRight className="w-5 h-5 ml-1" />
+              </Button>
+            )}
           </div>
         </div>
       </section>
@@ -233,11 +239,23 @@ export default function RegistrationPage() {
       <section id="register-form" className="py-16 px-4 border-t border-[#231045] bg-[#0c0516] scroll-mt-20">
         <div className="max-w-xl mx-auto space-y-6">
           <div className="text-center space-y-2">
-            <Badge variant="gold">OFFICIAL REGISTRATION</Badge>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">CLAIM YOUR TICKET PASS</h2>
-            <p className="text-slate-400 text-xs sm:text-sm">
-              Fill in your details below to generate your official digital QR entry ticket pass.
-            </p>
+            {eventStatus?.isClosed ? (
+              <>
+                <Badge variant="gold">CAPACITY FILLED</Badge>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">REGISTRATION IS CLOSED</h2>
+                <p className="text-slate-400 text-xs sm:text-sm">
+                  Maximum ticket capacity has been reached. All passes have been claimed!
+                </p>
+              </>
+            ) : (
+              <>
+                <Badge variant="gold">OFFICIAL REGISTRATION</Badge>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">CLAIM YOUR TICKET PASS</h2>
+                <p className="text-slate-400 text-xs sm:text-sm">
+                  Fill in your details below to generate your official digital QR entry ticket pass.
+                </p>
+              </>
+            )}
           </div>
 
           {eventStatus?.isClosed ? (
