@@ -49,6 +49,7 @@ export interface EventSettings {
   usnRequired: boolean;
   lastNameRequired: boolean;
   maxTickets: number;
+  registrationClosed: boolean;
   logoUrl: string;
   branches: string[];
 }
@@ -72,6 +73,12 @@ export const EVENT_SETTING_FIELDS: EventSettingField[] = [
   { key: "collegeName", label: "College Name", type: "text" },
   { key: "department", label: "Department / Fest", type: "text" },
   { key: "contactEmail", label: "Contact Email", type: "text" },
+  {
+    key: "registrationClosed",
+    label: "Close Registration Manually",
+    type: "boolean",
+    hint: "Turn ON to manually close registration and display 'Registration Closed — Meet you on 12th September!'.",
+  },
   {
     key: "maxTickets",
     label: "Maximum Ticket Capacity",
@@ -128,6 +135,7 @@ export const DEFAULT_EVENT_SETTINGS: EventSettings = {
   usnRequired: true,
   lastNameRequired: false,
   maxTickets: 0,
+  registrationClosed: false,
   logoUrl: "",
   branches: EVENT_CONFIG.branches,
 };
@@ -135,6 +143,7 @@ export const DEFAULT_EVENT_SETTINGS: EventSettings = {
 export function mergeEventSettings(stored?: Partial<EventSettings> | null): EventSettings {
   const merged = { ...DEFAULT_EVENT_SETTINGS, ...(stored || {}) };
   merged.maxTickets = typeof merged.maxTickets === "number" ? merged.maxTickets : (parseInt(String(merged.maxTickets || "0"), 10) || 0);
+  merged.registrationClosed = Boolean(merged.registrationClosed);
   if (typeof merged.logoUrl !== "string") merged.logoUrl = "";
   if (!Array.isArray(merged.branches) || merged.branches.length === 0) merged.branches = EVENT_CONFIG.branches;
   return merged;

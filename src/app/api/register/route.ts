@@ -61,6 +61,12 @@ export async function POST(request: NextRequest) {
         }
 
         const settings = await getEventSettingsServer();
+        if (settings.registrationClosed) {
+            return NextResponse.json(
+                { error: "Registration is currently closed for this event." },
+                { status: 403 }
+            );
+        }
         if (settings.maxTickets > 0) {
             const { getAttendees } = await import("@/lib/db");
             const { total } = await getAttendees();
