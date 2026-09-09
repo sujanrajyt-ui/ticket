@@ -123,90 +123,113 @@ export default function SuccessPage() {
 
     return (
         <main className="min-h-screen bg-[#0c0516] text-slate-100 py-8 px-4 sm:py-12">
-            <div className="max-w-md mx-auto space-y-6">
+            <div className="max-w-md mx-auto space-y-5">
                 {/* Header Banner */}
                 <div className="text-center space-y-2">
-                    <div className="inline-flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-800 text-emerald-300 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        REGISTRATION SUCCESSFUL
+                    <div className="inline-flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-800 text-emerald-300 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        Registration Successful
                     </div>
-                    <h1 className="text-2xl font-black text-white">YOUR OFFICIAL ENTRY PASS</h1>
-                    <p className="text-slate-400 text-xs">Present this pass on your screen at the entrance</p>
+                    <h1 className="text-xl font-black text-white tracking-tight">YOUR OFFICIAL ENTRY PASS</h1>
                 </div>
 
                 {/* ── TICKET PASS CARD ── */}
-                <div className="bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl overflow-hidden shadow-2xl relative">
+                <div
+                    className="bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl overflow-hidden relative"
+                    style={{ boxShadow: "0 0 0 1px rgba(120,50,220,0.2), 0 8px 40px rgba(80,20,180,0.5), 0 20px 60px rgba(0,0,0,0.6)" }}
+                >
                     {/* Top Pass Header */}
-                    <div className="bg-gradient-to-b from-[#240e47] to-[#170830] p-6 border-b border-[#301459] space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
-                                OFFICIAL ADMIT PASS
+                    <div className="relative bg-gradient-to-b from-[#2c1255] via-[#1e0940] to-[#170830] px-6 pt-5 pb-6 border-b border-[#2e1050]">
+                        {/* Subtle sparkles */}
+                        <span className="absolute top-4 left-10 text-amber-500/30 text-lg select-none">✦</span>
+                        <span className="absolute top-3 right-12 text-amber-400/20 text-sm select-none">✦</span>
+
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-[9px] font-black uppercase tracking-[0.15em] text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/25">
+                                ✦ OFFICIAL ADMIT PASS
                             </span>
-                            <span className="font-mono text-xs font-extrabold text-slate-300 tracking-wider">
-                                #{attendee.registration_id}
+                            <span className="font-mono text-[10px] font-bold text-slate-400 tracking-wider">
+                                {attendee.registration_id}
                             </span>
                         </div>
 
-                        <div className="pt-2 text-center">
-                            <h2 className="text-2xl font-black text-amber-400 tracking-tight">
-                                NITTE&apos;S GOT <span className="text-white">LATENT</span>
+                        <div className="text-center space-y-1">
+                            <h2
+                                className="text-3xl font-black tracking-tight leading-none"
+                                style={{
+                                    background: "linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%)",
+                                    WebkitBackgroundClip: "text",
+                                    WebkitTextFillColor: "transparent",
+                                }}
+                            >
+                                NITTE&apos;S GOT LATENT
                             </h2>
-                            <p className="text-xs text-slate-300 font-semibold">{settings.collegeName}</p>
-                            <p className="text-[11px] text-amber-400/90 font-medium">{settings.department}</p>
+                            <p className="text-[11px] text-slate-300 font-semibold">{settings.collegeName}</p>
+                            <p className="text-[10px] text-amber-400/80 font-medium tracking-wider uppercase">{settings.department}</p>
                         </div>
                     </div>
 
                     {/* Perforated Divider */}
-                    <div className="relative bg-[#150a29] py-1">
-                        <div className="absolute -left-4 -top-3 w-6 h-6 rounded-full bg-[#0c0516] border border-[#3b1a6e]" />
-                        <div className="absolute -right-4 -top-3 w-6 h-6 rounded-full bg-[#0c0516] border border-[#3b1a6e]" />
-                        <div className="border-t-2 border-dashed border-[#301459] mx-6" />
+                    <div className="relative bg-[#120820] py-2">
+                        <div className="absolute -left-3.5 -top-3.5 w-7 h-7 rounded-full bg-[#0c0516]" style={{ boxShadow: "inset 0 0 0 1.5px #3b1a6e" }} />
+                        <div className="absolute -right-3.5 -top-3.5 w-7 h-7 rounded-full bg-[#0c0516]" style={{ boxShadow: "inset 0 0 0 1.5px #3b1a6e" }} />
+                        <div className="border-t border-dashed border-[#3b1a6e]/60 mx-8" />
                     </div>
 
                     {/* Participant Info */}
-                    <div className="p-6 space-y-4">
-                        <div className="bg-[#1d0e3b] border border-[#381a69] rounded-2xl p-4 space-y-2">
-                            <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Participant Name</p>
-                                <p className="text-lg font-extrabold text-white">{fullName}</p>
+                    <div className="px-5 pt-4 pb-5 space-y-4 bg-[#0f061e]">
+                        {/* Name + USN + Branch card */}
+                        <div className="bg-[#1a0c33] border border-[#2e1457] rounded-2xl divide-y divide-[#2b1450]">
+                            {/* Name row */}
+                            <div className="px-4 py-3">
+                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Participant</p>
+                                <p className="text-base font-black text-white leading-tight">{fullName}</p>
                             </div>
-                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#31165c] text-xs">
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">USN</p>
-                                    <p className="font-mono font-bold text-amber-400">{attendee.usn || "—"}</p>
+                            {/* USN + Branch row */}
+                            <div className="grid grid-cols-2 divide-x divide-[#2b1450]">
+                                <div className="px-4 py-3">
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">USN</p>
+                                    <p className="font-mono text-sm font-extrabold text-amber-400">{attendee.usn || "—"}</p>
                                 </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Branch</p>
-                                    <p className="font-medium text-slate-200 text-xs leading-snug">{attendee.branch || "CSE"}</p>
-                                    <p className="text-[10px] text-slate-400 mt-0.5">{attendee.year || ""}</p>
+                                <div className="px-4 py-3">
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Branch · Year</p>
+                                    <p className="text-xs font-semibold text-slate-200 leading-snug">{attendee.branch || "CSE"}</p>
+                                    {attendee.year && <p className="text-[10px] text-slate-400 mt-0.5">{attendee.year}</p>}
                                 </div>
                             </div>
                         </div>
 
                         {/* QR Code */}
-                        <div className="text-center space-y-3 pt-2">
-                            <div className="inline-block p-5 bg-white rounded-2xl shadow-xl border-4 border-amber-400/80">
+                        <div className="flex flex-col items-center gap-2.5 py-1">
+                            <div
+                                className="p-4 bg-white rounded-2xl"
+                                style={{ boxShadow: "0 0 0 3px rgba(251,191,36,0.4), 0 8px 30px rgba(251,191,36,0.15), 0 4px 20px rgba(0,0,0,0.5)" }}
+                            >
                                 {qrDataUrl ? (
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={qrDataUrl} alt="Official Entry QR Code" className="w-48 h-48 sm:w-56 sm:h-56 mx-auto rounded-md" />
+                                    <img src={qrDataUrl} alt="Official Entry QR Code" className="w-52 h-52 block rounded" />
                                 ) : (
-                                    <div className="w-48 h-48 sm:w-56 sm:h-56 mx-auto bg-slate-100 flex items-center justify-center">
+                                    <div className="w-52 h-52 bg-slate-100 flex items-center justify-center">
                                         <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
                                     </div>
                                 )}
                             </div>
-                            <p className="text-xs font-bold text-amber-400 tracking-wider uppercase">SCAN THIS QR AT THE ENTRANCE</p>
+                            <p className="text-[10px] font-bold text-amber-400/90 tracking-[0.18em] uppercase">✦ Scan this QR at the entrance ✦</p>
                         </div>
 
-                        {/* Venue & Time Footer */}
-                        <div className="bg-[#120721] border border-[#2b144e] rounded-xl p-3.5 flex items-center justify-between text-xs text-slate-300">
-                            <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                                <span>{settings.date}</span>
+                        {/* Footer bar */}
+                        <div className="bg-[#1a0c33] border border-[#2e1457] rounded-xl px-4 py-3 flex items-center gap-3 text-xs">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <Calendar className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                                <div className="min-w-0">
+                                    <p className="font-bold text-white truncate">{settings.date}</p>
+                                    <p className="text-slate-400 text-[10px]">{settings.time}</p>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2 min-w-0">
-                                <MapPin className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                                <span className="truncate">{settings.venue}</span>
+                            <div className="w-px h-8 bg-[#2e1457] flex-shrink-0" />
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <MapPin className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                                <p className="font-semibold text-slate-200 truncate">{settings.venue}</p>
                             </div>
                         </div>
                     </div>
