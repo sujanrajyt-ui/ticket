@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -30,6 +30,10 @@ export default function RegistrationPage() {
   const { settings } = useEventConfig();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phoneInput, setPhoneInput] = useState("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [phoneLoading, setPhoneLoading] = useState(false);
+  const phoneRef = useRef<HTMLInputElement>(null);
 
   const schema = useMemo(() => {
     const usnRegex = compileUSNRegex(settings.usnRegex);
@@ -112,6 +116,31 @@ export default function RegistrationPage() {
 
   const scrollToRegister = () => {
     document.getElementById("register-form")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleViewPass = async () => {
+    const phone = phoneInput.trim().replace(/\D/g, "");
+    if (phone.length !== 10) {
+      setPhoneError("Enter a valid 10-digit mobile number.");
+      phoneRef.current?.focus();
+      return;
+    }
+    setPhoneError(null);
+    setPhoneLoading(true);
+    try {
+      const res = await fetch("/api/lookup-by-phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+      const json = await res.json();
+      if (!res.ok) { setPhoneError(json.error || "Not found."); return; }
+      router.push(`/success/${json.qr_token}`);
+    } catch {
+      setPhoneError("Network error. Please try again.");
+    } finally {
+      setPhoneLoading(false);
+    }
   };
 
   return (
@@ -303,6 +332,37 @@ export default function RegistrationPage() {
                 🔒 Official registration for {settings.collegeName}. No registration fee required.
               </p>
             </form>
+          </div>
+
+          {/* View Existing Pass */}
+          <div className="bg-[#100820] border border-[#2e1457] rounded-3xl p-5 space-y-3">
+            <div className="text-center">
+              <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Already Registered?</p>
+              <p className="text-slate-400 text-xs mt-0.5">Enter your mobile number to view your existing pass</p>
+            </div>
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <input
+                  ref={phoneRef}
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="10-digit mobile number"
+                  value={phoneInput}
+                  onChange={(e) => { setPhoneInput(e.target.value.replace(/\D/g, "")); setPhoneError(null); }}
+                  onKeyDown={(e) => e.key === "Enter" && handleViewPass()}
+                  className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+              <button
+                onClick={handleViewPass}
+                disabled={phoneLoading}
+                className="flex-shrink-0 bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-slate-950 font-extrabold text-xs rounded-xl px-4 py-2.5 transition-colors"
+              >
+                {phoneLoading ? "…" : "View Pass"}
+              </button>
+            </div>
+            {phoneError && <p className="text-red-400 text-xs font-semibold text-center">{phoneError}</p>}
           </div>
         </div>
       </section>

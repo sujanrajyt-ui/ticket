@@ -240,6 +240,29 @@ export async function lookupAttendee(rawQuery: string): Promise<Attendee | null>
     }
 }
 
+export async function lookupAttendeeByPhone(phone: string): Promise<Attendee | null> {
+    const clean = phone.trim().replace(/\D/g, "");
+    if (!clean) return null;
+
+    // Check mock store first
+    const mockMatch = mockAttendees.find((a) => a.phone === clean);
+    if (mockMatch) return mockMatch;
+
+    if (isMockMode()) return null;
+
+    try {
+        const supabase = await createAdminClient();
+        const { data } = await supabase
+            .from("attendees")
+            .select("*")
+            .eq("phone", clean)
+            .maybeSingle();
+        return data as unknown as Attendee | null;
+    } catch {
+        return null;
+    }
+}
+
 export async function deleteAttendee(idOrToken: string): Promise<{ success: boolean; error?: string }> {
     if (!idOrToken) return { success: false, error: "ID or Token required" };
 

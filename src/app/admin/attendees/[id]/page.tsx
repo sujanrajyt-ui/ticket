@@ -21,15 +21,10 @@ export default function AttendeeDetailPage() {
     const [userRole, setUserRole] = useState<"admin" | "volunteer" | null>(null);
 
     useEffect(() => {
-        import("@/lib/supabase/client").then(({ createClient }) => {
-            const supabase = createClient();
-            supabase.auth.getUser().then(async ({ data: { user } }) => {
-                if (!user) return;
-                const { data: rawProfile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-                const profile = rawProfile as unknown as { role: "admin" | "volunteer" } | null;
-                setUserRole(profile?.role || null);
-            });
-        });
+        fetch("/api/admin/me")
+            .then((r) => r.json())
+            .then((json) => { if (json.role) setUserRole(json.role); })
+            .catch(() => { /* keep null */ });
     }, []);
 
     const fetchAttendee = async () => {
