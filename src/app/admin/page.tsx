@@ -61,8 +61,12 @@ export default function AdminDashboard() {
     }, []);
 
     const handleLogout = async () => {
-        const supabase = createClient();
-        await supabase.auth.signOut();
+        try {
+            const supabase = createClient();
+            await supabase.auth.signOut();
+        } catch { /* ignore */ }
+        // Clear custom admin_session cookie
+        await fetch("/api/admin/logout", { method: "POST" });
         router.push("/admin/login");
     };
 

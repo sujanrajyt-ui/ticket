@@ -376,7 +376,7 @@ export async function getAttendees(search = "", filter = "all"): Promise<{ atten
                 a.first_name.toLowerCase().includes(s) ||
                 a.last_name.toLowerCase().includes(s) ||
                 a.email.toLowerCase().includes(s) ||
-                a.usn.toLowerCase().includes(s) ||
+                (a.usn?.toLowerCase() || "").includes(s) ||
                 a.registration_id.toLowerCase().includes(s)
         );
     }

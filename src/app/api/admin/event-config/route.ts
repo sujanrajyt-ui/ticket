@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Profile } from "@/types/database";
 import { EVENT_SETTING_FIELDS, EventSettings, mergeEventSettings } from "@/config/event";
 
 async function requireAdmin() {
+    // Accept cookie-based admin session (used by the hardcoded login)
+    const cookieStore = await cookies();
+    const adminSessionRaw = cookieStore.get("admin_session")?.value;
+    if (adminSessionRaw) {
+        try {
+            const session = JSON.parse(adminSessionRaw) as { role?: string };
+            if (session.role === "admin") {
+                return { supabase: await createAdminClient() };
+            }
+            return { error: "Forbidden", status: 403 as const };
+        } catch {
+            return { error: "Unauthorized", status: 401 as const };
+        }
+    }
+
+    // Fallback: Supabase JWT auth
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: "Unauthorized", status: 401 as const };

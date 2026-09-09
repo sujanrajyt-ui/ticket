@@ -154,32 +154,32 @@ export default function RegistrationPage() {
           {/* Event Quick Meta Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl mx-auto pt-2">
             <div className="bg-[#150a29] border border-[#2e1457] rounded-2xl p-4 flex items-center gap-3.5 text-left">
-              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex-shrink-0">
                 <Calendar className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Event Date</p>
-                <p className="text-sm font-extrabold text-white">{settings.date}</p>
+                <p className="text-sm font-extrabold text-white truncate">{settings.date}</p>
               </div>
             </div>
 
             <div className="bg-[#150a29] border border-[#2e1457] rounded-2xl p-4 flex items-center gap-3.5 text-left">
-              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex-shrink-0">
                 <Clock className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Timings</p>
-                <p className="text-sm font-extrabold text-white">{settings.time}</p>
+                <p className="text-sm font-extrabold text-white truncate">{settings.time}</p>
               </div>
             </div>
 
             <div className="bg-[#150a29] border border-[#2e1457] rounded-2xl p-4 flex items-center gap-3.5 text-left">
-              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex-shrink-0">
                 <MapPin className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Venue</p>
-                <p className="text-sm font-extrabold text-white truncate">{settings.venue}</p>
+                <p className="text-sm font-extrabold text-white truncate" title={settings.venue}>{settings.venue}</p>
               </div>
             </div>
           </div>
