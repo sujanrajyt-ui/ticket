@@ -33,7 +33,15 @@ export default function RegistrationPage() {
   const [phoneInput, setPhoneInput] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [phoneLoading, setPhoneLoading] = useState(false);
+  const [eventStatus, setEventStatus] = useState<{ isClosed: boolean; date?: string; total?: number; maxTickets?: number } | null>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch("/api/event-status")
+      .then((r) => r.json())
+      .then((d) => setEventStatus(d))
+      .catch(() => { });
+  }, []);
 
   const schema = useMemo(() => {
     const usnRegex = compileUSNRegex(settings.usnRegex);
@@ -232,107 +240,145 @@ export default function RegistrationPage() {
             </p>
           </div>
 
-          <div className="bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
-            {serverError && (
-              <div className="p-4 rounded-2xl bg-red-950/80 border border-red-800/80 text-red-300 text-xs font-semibold">
-                {serverError}
+          {eventStatus?.isClosed ? (
+            <div className="bg-[#140929] border-2 border-red-500/40 rounded-3xl p-6 sm:p-10 text-center space-y-6 shadow-2xl shadow-purple-950">
+              <div className="inline-flex items-center gap-2 bg-red-950/80 border border-red-800 text-red-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                REGISTRATION CLOSED
               </div>
-            )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <h2 className="text-3xl sm:text-5xl font-black text-amber-400 tracking-tight">
+                  REGISTRATION CLOSED
+                </h2>
+                <p className="text-xl sm:text-2xl font-black text-white">
+                  Meet you on {settings.date || "12th September"}! 🎉
+                </p>
+                <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto pt-1 leading-relaxed">
+                  Maximum ticket capacity has been reached. All official digital entry passes for {settings.name} have been claimed!
+                </p>
+              </div>
+
+              <div className="bg-[#0f0620] border border-[#2b144e] rounded-2xl p-5 text-slate-300 text-xs flex flex-wrap items-center justify-around gap-4">
+                <div className="text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">EVENT DATE</p>
+                  <p className="font-extrabold text-amber-400 text-sm mt-0.5">{settings.date}</p>
+                </div>
+                <div className="w-px h-8 bg-[#28124b] hidden sm:block" />
+                <div className="text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">VENUE</p>
+                  <p className="font-extrabold text-white text-sm mt-0.5">{settings.venue}</p>
+                </div>
+                <div className="w-px h-8 bg-[#28124b] hidden sm:block" />
+                <div className="text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">TIMINGS</p>
+                  <p className="font-extrabold text-white text-sm mt-0.5">{settings.time}</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+              {serverError && (
+                <div className="p-4 rounded-2xl bg-red-950/80 border border-red-800/80 text-red-300 text-xs font-semibold">
+                  {serverError}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="First Name"
+                    placeholder="e.g. Rahul"
+                    error={errors.first_name?.message}
+                    required
+                    autoComplete="given-name"
+                    {...register("first_name")}
+                  />
+                  <Input
+                    label="Last Name"
+                    placeholder="e.g. Sharma"
+                    error={errors.last_name?.message}
+                    autoComplete="family-name"
+                    {...register("last_name")}
+                  />
+                </div>
+
                 <Input
-                  label="First Name"
-                  placeholder="e.g. Rahul"
-                  error={errors.first_name?.message}
+                  label="Email Address"
+                  type="email"
+                  placeholder="rahul@example.com"
+                  error={errors.email?.message}
                   required
-                  autoComplete="given-name"
-                  {...register("first_name")}
+                  autoComplete="email"
+                  {...register("email")}
                 />
+
                 <Input
-                  label="Last Name"
-                  placeholder="e.g. Sharma"
-                  error={errors.last_name?.message}
-                  required={settings.lastNameRequired}
-                  autoComplete="family-name"
-                  {...register("last_name")}
+                  label={settings.usnLabel || "USN / Student ID"}
+                  placeholder={settings.usnHint || "e.g. 4NM22CS001"}
+                  error={errors.usn?.message}
+                  required={settings.usnRequired}
+                  {...register("usn")}
                 />
-              </div>
 
-              <Input
-                label={settings.usnLabel}
-                placeholder="e.g. 4NM22CS001"
-                hint={settings.usnHint}
-                error={errors.usn?.message}
-                required={settings.usnRequired}
-                autoComplete="off"
-                autoCapitalize="characters"
-                {...register("usn")}
-              />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+                      Branch / Department <span className="text-amber-400">*</span>
+                    </label>
+                    <select
+                      {...register("branch")}
+                      className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    >
+                      {(settings.branches || EVENT_CONFIG.branches).map((b) => (
+                        <option key={b} value={b} className="bg-[#120721] text-white">
+                          {b}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider">
-                    Branch <span className="text-amber-400">*</span>
-                  </label>
-                  <select
-                    {...register("branch")}
-                    className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-base text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  >
-                    {settings.branches.map((b) => (
-                      <option key={b} value={b} className="bg-[#120721] text-white">{b}</option>
-                    ))}
-                  </select>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+                      Academic Year <span className="text-amber-400">*</span>
+                    </label>
+                    <select
+                      {...register("year")}
+                      className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    >
+                      {EVENT_CONFIG.years.map((y) => (
+                        <option key={y} value={y} className="bg-[#120721] text-white">
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider">
-                    Year of Study <span className="text-amber-400">*</span>
-                  </label>
-                  <select
-                    {...register("year")}
-                    className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-base text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  >
-                    {EVENT_CONFIG.years.map((y) => (
-                      <option key={y} value={y} className="bg-[#120721] text-white">{y}</option>
-                    ))}
-                  </select>
+                <Input
+                  label="Phone Number"
+                  type="tel"
+                  placeholder="9876543210"
+                  error={errors.phone?.message}
+                  required
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={10}
+                  {...register("phone")}
+                />
+
+                <div className="pt-2">
+                  <Button type="submit" fullWidth size="lg" loading={isSubmitting} className="py-4 text-base">
+                    GET ENTRY PASS <Ticket className="w-5 h-5 ml-1" />
+                  </Button>
                 </div>
-              </div>
 
-              <Input
-                label="Email Address"
-                type="email"
-                placeholder="rahul@nitte.edu.in"
-                error={errors.email?.message}
-                required
-                autoComplete="email"
-                {...register("email")}
-              />
-
-              <Input
-                label="Phone Number"
-                type="tel"
-                placeholder="9876543210"
-                error={errors.phone?.message}
-                required
-                inputMode="numeric"
-                autoComplete="tel"
-                maxLength={10}
-                {...register("phone")}
-              />
-
-              <div className="pt-2">
-                <Button type="submit" fullWidth size="lg" loading={isSubmitting} className="py-4 text-base">
-                  GET ENTRY PASS <Ticket className="w-5 h-5 ml-1" />
-                </Button>
-              </div>
-
-              <p className="text-[11px] text-center text-slate-400">
-                🔒 Official registration for {settings.collegeName}. No registration fee required.
-              </p>
-            </form>
-          </div>
+                <p className="text-[11px] text-center text-slate-400">
+                  🔒 Official registration for {settings.collegeName}. No registration fee required.
+                </p>
+              </form>
+            </div>
+          )}
 
           {/* View Existing Pass */}
           <div className="bg-[#100820] border border-[#2e1457] rounded-3xl p-5 space-y-3">
