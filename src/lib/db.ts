@@ -280,10 +280,38 @@ export async function deleteAttendee(idOrToken: string): Promise<{ success: bool
 
     try {
         const supabase = await createAdminClient();
-        const { error } = await supabase
+
+        // Try by registration_id first (most common path from admin UI)
+        let { data, error } = await supabase
             .from("attendees")
             .delete()
-            .or(`id.eq.${clean},qr_token.eq.${clean},registration_id.eq.${clean}`);
+            .eq("registration_id", clean)
+            .select("id");
+
+        // If no match, try by qr_token
+        if (!error && (!data || data.length === 0)) {
+            const res2 = await supabase
+                .from("attendees")
+                .delete()
+                .eq("qr_token", clean)
+                .select("id");
+            data = res2.data;
+            error = res2.error;
+        }
+
+        // If still no match and clean looks like a UUID, try by id
+        if (!error && (!data || data.length === 0)) {
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean);
+            if (isUuid || clean.startsWith("mock-")) {
+                const res3 = await supabase
+                    .from("attendees")
+                    .delete()
+                    .eq("id", clean)
+                    .select("id");
+                data = res3.data;
+                error = res3.error;
+            }
+        }
 
         if (error) {
             console.error("Delete attendee DB error:", error);
@@ -329,12 +357,32 @@ export async function checkInAttendee(rawToken: string): Promise<{ success: bool
     try {
         const supabase = await createAdminClient();
 
-        // Direct Query to find attendee
-        const { data: rawAttendee } = await supabase
+        // Try by qr_token first
+        let { data: rawAttendee } = await supabase
             .from("attendees")
             .select("*")
-            .or(`qr_token.eq.${token},registration_id.eq.${token},usn.ilike.${token}`)
+            .eq("qr_token", token)
             .maybeSingle();
+
+        // If no match, try by registration_id
+        if (!rawAttendee) {
+            const { data } = await supabase
+                .from("attendees")
+                .select("*")
+                .eq("registration_id", token)
+                .maybeSingle();
+            rawAttendee = data;
+        }
+
+        // If no match, try by USN (case-insensitive)
+        if (!rawAttendee) {
+            const { data } = await supabase
+                .from("attendees")
+                .select("*")
+                .ilike("usn", token)
+                .maybeSingle();
+            rawAttendee = data;
+        }
 
         const attendee = rawAttendee as unknown as Attendee | null;
 

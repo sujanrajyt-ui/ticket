@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { lookupAttendee, deleteAttendee } from "@/lib/db";
+import { cookies } from "next/headers";
+
+async function requireAdmin() {
+    const cookieStore = await cookies();
+    const adminSessionRaw = cookieStore.get("admin_session")?.value;
+    if (adminSessionRaw) {
+        try {
+            const session = JSON.parse(adminSessionRaw) as { role?: string };
+            if (session.role === "admin") return true;
+        } catch { /* ignore */ }
+    }
+    return false;
+}
 
 export async function GET(
     request: NextRequest,
@@ -24,6 +37,11 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const isAdmin = await requireAdmin();
+        if (!isAdmin) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const { id } = await params;
         const result = await deleteAttendee(id);
 

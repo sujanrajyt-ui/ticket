@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
             name: `${attendee.first_name} ${attendee.last_name}`.trim(),
             usn: attendee.usn,
             registration_id: attendee.registration_id,
+            branch: attendee.branch,
+            year: attendee.year,
             checked_in: attendee.checked_in,
             checked_in_at: attendee.checked_in_at,
         });
