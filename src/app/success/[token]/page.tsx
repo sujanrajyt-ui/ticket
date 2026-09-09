@@ -182,7 +182,7 @@ export default function SuccessPage() {
                         <div className="bg-[#1a0c33] border border-[#2e1457] rounded-2xl divide-y divide-[#2b1450]">
                             {/* Name row */}
                             <div className="px-4 py-3">
-                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Participant</p>
+                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Name</p>
                                 <p className="text-base font-black text-white leading-tight">{fullName}</p>
                             </div>
                             {/* USN + Branch row */}
