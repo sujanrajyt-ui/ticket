@@ -135,15 +135,15 @@ export const DEFAULT_EVENT_SETTINGS: EventSettings = {
   usnRequired: true,
   lastNameRequired: false,
   maxTickets: 240,
-  registrationClosed: false,
+  registrationClosed: true,
   logoUrl: "",
   branches: EVENT_CONFIG.branches,
 };
 
 export function mergeEventSettings(stored?: Partial<EventSettings> | null): EventSettings {
   const merged = { ...DEFAULT_EVENT_SETTINGS, ...(stored || {}) };
-  merged.maxTickets = typeof merged.maxTickets === "number" ? merged.maxTickets : (parseInt(String(merged.maxTickets || "0"), 10) || 0);
-  merged.registrationClosed = Boolean(merged.registrationClosed);
+  merged.maxTickets = typeof merged.maxTickets === "number" ? merged.maxTickets : (parseInt(String(merged.maxTickets || "240"), 10) || 240);
+  merged.registrationClosed = typeof stored?.registrationClosed === "boolean" ? stored.registrationClosed : true;
   if (typeof merged.logoUrl !== "string") merged.logoUrl = "";
   if (!Array.isArray(merged.branches) || merged.branches.length === 0) merged.branches = EVENT_CONFIG.branches;
   return merged;
