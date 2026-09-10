@@ -61,22 +61,7 @@ export async function POST(request: NextRequest) {
         }
 
         const settings = await getEventSettingsServer();
-        if (settings.registrationClosed) {
-            return NextResponse.json(
-                { error: "Registration is currently closed for this event." },
-                { status: 403 }
-            );
-        }
-        if (settings.maxTickets > 0) {
-            const { getAttendees } = await import("@/lib/db");
-            const { total } = await getAttendees();
-            if (total >= settings.maxTickets) {
-                return NextResponse.json(
-                    { error: `Registration limit reached! Maximum ticket capacity of ${settings.maxTickets} has been filled.` },
-                    { status: 403 }
-                );
-            }
-        }
+
         const registrationSchema = buildRegistrationSchema(settings);
 
         const body = await request.json();
