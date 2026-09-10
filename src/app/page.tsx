@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -33,28 +33,23 @@ export default function RegistrationPage() {
   const [phoneInput, setPhoneInput] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [phoneLoading, setPhoneLoading] = useState(false);
-  const [eventStatus, setEventStatus] = useState<{ isClosed: boolean; date?: string; total?: number; maxTickets?: number } | null>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    fetch("/api/event-status")
-      .then((r) => r.json())
-      .then((d) => setEventStatus(d))
-      .catch(() => { });
-  }, []);
 
   const schema = useMemo(() => {
     const usnRegex = compileUSNRegex(settings.usnRegex);
     let usnBase = z.string().max(50);
+
     if (settings.usnRequired && !usnRegex) {
       usnBase = z.string().min(1, "USN / ID is required").max(50);
     }
+
     if (usnRegex) {
       usnBase = z
         .string()
         .regex(usnRegex, "Invalid USN / ID format")
         .max(50);
     }
+
     const usn = settings.usnRequired
       ? usnBase
       : usnBase.optional().or(z.literal(""));
@@ -128,21 +123,30 @@ export default function RegistrationPage() {
 
   const handleViewPass = async () => {
     const phone = phoneInput.trim().replace(/\D/g, "");
+
     if (phone.length !== 10) {
       setPhoneError("Enter a valid 10-digit mobile number.");
       phoneRef.current?.focus();
       return;
     }
+
     setPhoneError(null);
     setPhoneLoading(true);
+
     try {
       const res = await fetch("/api/lookup-by-phone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone }),
       });
+
       const json = await res.json();
-      if (!res.ok) { setPhoneError(json.error || "Not found."); return; }
+
+      if (!res.ok) {
+        setPhoneError(json.error || "Not found.");
+        return;
+      }
+
       router.push(`/success/${json.qr_token}`);
     } catch {
       setPhoneError("Network error. Please try again.");
@@ -153,12 +157,15 @@ export default function RegistrationPage() {
 
   return (
     <div className="min-h-screen bg-[#0c0516] text-slate-100 selection:bg-amber-500 selection:text-black">
+
       {/* HERO SECTION */}
       <section className="relative pt-8 pb-16 px-4 overflow-hidden">
+
         {/* Subtle curtain backdrop highlight */}
         <div className="absolute inset-0 bg-radial from-purple-900/20 via-transparent to-transparent pointer-events-none" />
 
         <div className="max-w-5xl mx-auto text-center space-y-8 relative z-10">
+
           {/* Official Event Poster Display */}
           <div className="relative mx-auto max-w-4xl rounded-3xl overflow-hidden border-2 border-[#3b1a6e] shadow-2xl shadow-purple-950/80 bg-[#140929]">
             <Image
@@ -176,11 +183,13 @@ export default function RegistrationPage() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
               {settings.name}
             </h1>
+
             {settings.tagline && (
               <p className="text-amber-400 text-sm sm:text-base font-semibold tracking-wide">
                 {settings.tagline}
               </p>
             )}
+
             {settings.description && (
               <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
                 {settings.description}
@@ -190,13 +199,19 @@ export default function RegistrationPage() {
 
           {/* Event Quick Meta Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl mx-auto pt-2">
+
             <div className="bg-[#150a29] border border-[#2e1457] rounded-2xl p-4 flex items-center gap-3.5 text-left">
               <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex-shrink-0">
                 <Calendar className="w-5 h-5" />
               </div>
+
               <div className="min-w-0">
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Event Date</p>
-                <p className="text-sm font-extrabold text-white truncate">{settings.date}</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Event Date
+                </p>
+                <p className="text-sm font-extrabold text-white truncate">
+                  {settings.date}
+                </p>
               </div>
             </div>
 
@@ -204,9 +219,14 @@ export default function RegistrationPage() {
               <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex-shrink-0">
                 <Clock className="w-5 h-5" />
               </div>
+
               <div className="min-w-0">
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Timings</p>
-                <p className="text-sm font-extrabold text-white truncate">{settings.time}</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Timings
+                </p>
+                <p className="text-sm font-extrabold text-white truncate">
+                  {settings.time}
+                </p>
               </div>
             </div>
 
@@ -214,197 +234,202 @@ export default function RegistrationPage() {
               <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex-shrink-0">
                 <MapPin className="w-5 h-5" />
               </div>
+
               <div className="min-w-0">
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Venue</p>
-                <p className="text-sm font-extrabold text-white truncate" title={settings.venue}>{settings.venue}</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Venue
+                </p>
+                <p
+                  className="text-sm font-extrabold text-white truncate"
+                  title={settings.venue}
+                >
+                  {settings.venue}
+                </p>
               </div>
             </div>
+
           </div>
 
           <div className="pt-4">
-            {eventStatus?.isClosed ? (
-              <Button onClick={scrollToRegister} size="lg" variant="secondary" className="px-8 py-4 text-base border-red-500/50 text-red-300 hover:text-white bg-red-950/40">
-                REGISTRATION CLOSED • MEET YOU ON 12TH SEPT <ArrowRight className="w-5 h-5 ml-1 text-red-400" />
-              </Button>
-            ) : (
-              <Button onClick={scrollToRegister} size="lg" className="px-8 py-4 text-base">
-                REGISTER / GET YOUR TICKET <ArrowRight className="w-5 h-5 ml-1" />
-              </Button>
-            )}
+            <Button
+              onClick={scrollToRegister}
+              size="lg"
+              className="px-8 py-4 text-base"
+            >
+              REGISTER / GET YOUR TICKET
+              <ArrowRight className="w-5 h-5 ml-1" />
+            </Button>
           </div>
+
         </div>
       </section>
 
       {/* REGISTRATION FORM SECTION */}
-      <section id="register-form" className="py-16 px-4 border-t border-[#231045] bg-[#0c0516] scroll-mt-20">
+      <section
+        id="register-form"
+        className="py-16 px-4 border-t border-[#231045] bg-[#0c0516] scroll-mt-20"
+      >
         <div className="max-w-xl mx-auto space-y-6">
+
           <div className="text-center space-y-2">
-            {eventStatus?.isClosed ? (
-              <>
-                <Badge variant="gold">CAPACITY FILLED</Badge>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">REGISTRATION IS CLOSED</h2>
-                <p className="text-slate-400 text-xs sm:text-sm">
-                  Maximum ticket capacity has been reached. All passes have been claimed!
-                </p>
-              </>
-            ) : (
-              <>
-                <Badge variant="gold">OFFICIAL REGISTRATION</Badge>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">CLAIM YOUR TICKET PASS</h2>
-                <p className="text-slate-400 text-xs sm:text-sm">
-                  Fill in your details below to generate your official digital QR entry ticket pass.
-                </p>
-              </>
-            )}
+            <Badge variant="gold">
+              OFFICIAL REGISTRATION
+            </Badge>
+
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+              CLAIM YOUR TICKET PASS
+            </h2>
+
+            <p className="text-slate-400 text-xs sm:text-sm">
+              Fill in your details below to generate your official digital QR entry ticket pass.
+            </p>
           </div>
 
-          {eventStatus?.isClosed ? (
-            <div className="bg-[#140929] border-2 border-red-500/40 rounded-3xl p-6 sm:p-10 text-center space-y-6 shadow-2xl shadow-purple-950">
-              <div className="inline-flex items-center gap-2 bg-red-950/80 border border-red-800 text-red-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                REGISTRATION CLOSED
-              </div>
+          <div className="bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
 
-              <div className="space-y-3">
-                <h2 className="text-3xl sm:text-5xl font-black text-amber-400 tracking-tight">
-                  REGISTRATION CLOSED
-                </h2>
-                <p className="text-xl sm:text-2xl font-black text-white">
-                  Meet you on {settings.date || "12th September"}! 🎉
-                </p>
-                <p className="text-slate-300 text-xs sm:text-sm max-w-md mx-auto pt-1 leading-relaxed">
-                  Maximum ticket capacity has been reached. All official digital entry passes for {settings.name} have been claimed!
-                </p>
+            {serverError && (
+              <div className="p-4 rounded-2xl bg-red-950/80 border border-red-800/80 text-red-300 text-xs font-semibold">
+                {serverError}
               </div>
+            )}
 
-              <div className="bg-[#0f0620] border border-[#2b144e] rounded-2xl p-5 text-slate-300 text-xs flex flex-wrap items-center justify-around gap-4">
-                <div className="text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">EVENT DATE</p>
-                  <p className="font-extrabold text-amber-400 text-sm mt-0.5">{settings.date}</p>
-                </div>
-                <div className="w-px h-8 bg-[#28124b] hidden sm:block" />
-                <div className="text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">VENUE</p>
-                  <p className="font-extrabold text-white text-sm mt-0.5">{settings.venue}</p>
-                </div>
-                <div className="w-px h-8 bg-[#28124b] hidden sm:block" />
-                <div className="text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">TIMINGS</p>
-                  <p className="font-extrabold text-white text-sm mt-0.5">{settings.time}</p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
-              {serverError && (
-                <div className="p-4 rounded-2xl bg-red-950/80 border border-red-800/80 text-red-300 text-xs font-semibold">
-                  {serverError}
-                </div>
-              )}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label="First Name"
-                    placeholder="e.g. Rahul"
-                    error={errors.first_name?.message}
-                    required
-                    autoComplete="given-name"
-                    {...register("first_name")}
-                  />
-                  <Input
-                    label="Last Name"
-                    placeholder="e.g. Sharma"
-                    error={errors.last_name?.message}
-                    autoComplete="family-name"
-                    {...register("last_name")}
-                  />
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 <Input
-                  label="Email Address"
-                  type="email"
-                  placeholder="rahul@example.com"
-                  error={errors.email?.message}
+                  label="First Name"
+                  placeholder="e.g. Rahul"
+                  error={errors.first_name?.message}
                   required
-                  autoComplete="email"
-                  {...register("email")}
+                  autoComplete="given-name"
+                  {...register("first_name")}
                 />
 
                 <Input
-                  label={settings.usnLabel || "USN / Student ID"}
-                  placeholder={settings.usnHint || "e.g. 4NM22CS001"}
-                  error={errors.usn?.message}
-                  required={settings.usnRequired}
-                  {...register("usn")}
+                  label="Last Name"
+                  placeholder="e.g. Sharma"
+                  error={errors.last_name?.message}
+                  autoComplete="family-name"
+                  {...register("last_name")}
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
-                      Branch / Department <span className="text-amber-400">*</span>
-                    </label>
-                    <select
-                      {...register("branch")}
-                      className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    >
-                      {(settings.branches || EVENT_CONFIG.branches).map((b) => (
-                        <option key={b} value={b} className="bg-[#120721] text-white">
-                          {b}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
-                      Academic Year <span className="text-amber-400">*</span>
-                    </label>
-                    <select
-                      {...register("year")}
-                      className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    >
-                      {EVENT_CONFIG.years.map((y) => (
-                        <option key={y} value={y} className="bg-[#120721] text-white">
-                          {y}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              <Input
+                label="Email Address"
+                type="email"
+                placeholder="rahul@example.com"
+                error={errors.email?.message}
+                required
+                autoComplete="email"
+                {...register("email")}
+              />
+
+              <Input
+                label={settings.usnLabel || "USN / Student ID"}
+                placeholder={settings.usnHint || "e.g. 4NM22CS001"}
+                error={errors.usn?.message}
+                required={settings.usnRequired}
+                {...register("usn")}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+                    Branch / Department{" "}
+                    <span className="text-amber-400">*</span>
+                  </label>
+
+                  <select
+                    {...register("branch")}
+                    className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    {(settings.branches || EVENT_CONFIG.branches).map((b) => (
+                      <option
+                        key={b}
+                        value={b}
+                        className="bg-[#120721] text-white"
+                      >
+                        {b}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                <Input
-                  label="Phone Number"
-                  type="tel"
-                  placeholder="9876543210"
-                  error={errors.phone?.message}
-                  required
-                  inputMode="numeric"
-                  autoComplete="tel"
-                  maxLength={10}
-                  {...register("phone")}
-                />
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+                    Academic Year{" "}
+                    <span className="text-amber-400">*</span>
+                  </label>
 
-                <div className="pt-2">
-                  <Button type="submit" fullWidth size="lg" loading={isSubmitting} className="py-4 text-base">
-                    GET ENTRY PASS <Ticket className="w-5 h-5 ml-1" />
-                  </Button>
+                  <select
+                    {...register("year")}
+                    className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    {EVENT_CONFIG.years.map((y) => (
+                      <option
+                        key={y}
+                        value={y}
+                        className="bg-[#120721] text-white"
+                      >
+                        {y}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                <p className="text-[11px] text-center text-slate-400">
-                  🔒 Official registration for {settings.collegeName}. No registration fee required.
-                </p>
-              </form>
-            </div>
-          )}
+              </div>
+
+              <Input
+                label="Phone Number"
+                type="tel"
+                placeholder="9876543210"
+                error={errors.phone?.message}
+                required
+                inputMode="numeric"
+                autoComplete="tel"
+                maxLength={10}
+                {...register("phone")}
+              />
+
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  fullWidth
+                  size="lg"
+                  loading={isSubmitting}
+                  className="py-4 text-base"
+                >
+                  GET ENTRY PASS
+                  <Ticket className="w-5 h-5 ml-1" />
+                </Button>
+              </div>
+
+              <p className="text-[11px] text-center text-slate-400">
+                🔒 Official registration for {settings.collegeName}. No registration fee required.
+              </p>
+
+            </form>
+
+          </div>
 
           {/* View Existing Pass */}
           <div className="bg-[#100820] border border-[#2e1457] rounded-3xl p-5 space-y-3">
+
             <div className="text-center">
-              <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Already Registered?</p>
-              <p className="text-slate-400 text-xs mt-0.5">Enter your mobile number to view your existing pass</p>
+              <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                Already Registered?
+              </p>
+
+              <p className="text-slate-400 text-xs mt-0.5">
+                Enter your mobile number to view your existing pass
+              </p>
             </div>
+
             <div className="flex gap-2">
+
               <div className="flex-1 relative">
                 <input
                   ref={phoneRef}
@@ -413,11 +438,19 @@ export default function RegistrationPage() {
                   maxLength={10}
                   placeholder="10-digit mobile number"
                   value={phoneInput}
-                  onChange={(e) => { setPhoneInput(e.target.value.replace(/\D/g, "")); setPhoneError(null); }}
-                  onKeyDown={(e) => e.key === "Enter" && handleViewPass()}
+                  onChange={(e) => {
+                    setPhoneInput(
+                      e.target.value.replace(/\D/g, "")
+                    );
+                    setPhoneError(null);
+                  }}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && handleViewPass()
+                  }
                   className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
+
               <button
                 onClick={handleViewPass}
                 disabled={phoneLoading}
@@ -425,17 +458,31 @@ export default function RegistrationPage() {
               >
                 {phoneLoading ? "…" : "View Pass"}
               </button>
+
             </div>
-            {phoneError && <p className="text-red-400 text-xs font-semibold text-center">{phoneError}</p>}
+
+            {phoneError && (
+              <p className="text-red-400 text-xs font-semibold text-center">
+                {phoneError}
+              </p>
+            )}
+
           </div>
+
         </div>
       </section>
 
       {/* FOOTER */}
       <footer className="border-t border-[#231045] bg-[#0a0412] py-8 text-center text-xs text-slate-500 space-y-2">
-        <p className="font-bold text-slate-400">{settings.name} • {settings.department}</p>
-        <p>{settings.collegeName}, Karkala, Karnataka</p>
+        <p className="font-bold text-slate-400">
+          {settings.name} • {settings.department}
+        </p>
+
+        <p>
+          {settings.collegeName}, Karkala, Karnataka
+        </p>
       </footer>
+
     </div>
   );
 }
