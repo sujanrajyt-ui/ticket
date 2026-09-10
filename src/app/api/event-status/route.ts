@@ -6,7 +6,7 @@ export async function GET() {
     try {
         const settings = await getEventSettingsServer();
         const { total } = await getAttendees();
-        const isClosed = false;
+        const isClosed = settings.registrationClosed || (settings.maxTickets > 0 && total >= settings.maxTickets);
 
         return NextResponse.json({
             isClosed,

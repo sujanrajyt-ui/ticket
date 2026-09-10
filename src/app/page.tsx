@@ -256,7 +256,7 @@ export default function RegistrationPage() {
               size="lg"
               className="px-8 py-4 text-base"
             >
-              REGISTER / GET YOUR TICKET
+              {settings.registrationClosed ? "VIEW YOUR TICKET PASS" : "REGISTER / GET YOUR TICKET"}
               <ArrowRight className="w-5 h-5 ml-1" />
             </Button>
           </div>
@@ -264,156 +264,177 @@ export default function RegistrationPage() {
         </div>
       </section>
 
-      {/* REGISTRATION FORM SECTION */}
+      {/* REGISTRATION FORM / CLOSED SECTION */}
       <section
         id="register-form"
         className="py-16 px-4 border-t border-[#231045] bg-[#0c0516] scroll-mt-20"
       >
         <div className="max-w-xl mx-auto space-y-6">
 
-          <div className="text-center space-y-2">
-            <Badge variant="gold">
-              OFFICIAL REGISTRATION
-            </Badge>
-
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-              CLAIM YOUR TICKET PASS
-            </h2>
-
-            <p className="text-slate-400 text-xs sm:text-sm">
-              Fill in your details below to generate your official digital QR entry ticket pass.
-            </p>
-          </div>
-
-          <div className="bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
-
-            {serverError && (
-              <div className="p-4 rounded-2xl bg-red-950/80 border border-red-800/80 text-red-300 text-xs font-semibold">
-                {serverError}
+          {settings.registrationClosed ? (
+            <div className="bg-[#150a29] border-2 border-amber-500/50 rounded-3xl p-6 sm:p-10 shadow-2xl text-center space-y-6">
+              <div className="w-16 h-16 rounded-full bg-amber-500/10 border-2 border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-3xl">
+                🎭
               </div>
-            )}
+              <div className="space-y-3">
+                <Badge variant="gold">
+                  OFFICIAL ANNOUNCEMENT
+                </Badge>
+                <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+                  Registration Closed — See You On 12th September!
+                </h2>
+                <p className="text-slate-300 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+                  Registrations for {settings.name} are currently closed. We look forward to seeing all registered participants at the event!
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="text-center space-y-2">
+                <Badge variant="gold">
+                  OFFICIAL REGISTRATION
+                </Badge>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+                  CLAIM YOUR TICKET PASS
+                </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                <Input
-                  label="First Name"
-                  placeholder="e.g. Rahul"
-                  error={errors.first_name?.message}
-                  required
-                  autoComplete="given-name"
-                  {...register("first_name")}
-                />
-
-                <Input
-                  label="Last Name"
-                  placeholder="e.g. Sharma"
-                  error={errors.last_name?.message}
-                  autoComplete="family-name"
-                  {...register("last_name")}
-                />
-
+                <p className="text-slate-400 text-xs sm:text-sm">
+                  Fill in your details below to generate your official digital QR entry ticket pass.
+                </p>
               </div>
 
-              <Input
-                label="Email Address"
-                type="email"
-                placeholder="rahul@example.com"
-                error={errors.email?.message}
-                required
-                autoComplete="email"
-                {...register("email")}
-              />
+              <div className="bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
 
-              <Input
-                label={settings.usnLabel || "USN / Student ID"}
-                placeholder={settings.usnHint || "e.g. 4NM22CS001"}
-                error={errors.usn?.message}
-                required={settings.usnRequired}
-                {...register("usn")}
-              />
+                {serverError && (
+                  <div className="p-4 rounded-2xl bg-red-950/80 border border-red-800/80 text-red-300 text-xs font-semibold">
+                    {serverError}
+                  </div>
+                )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
-                    Branch / Department{" "}
-                    <span className="text-amber-400">*</span>
-                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                  <select
-                    {...register("branch")}
-                    className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  >
-                    {(settings.branches || EVENT_CONFIG.branches).map((b) => (
-                      <option
-                        key={b}
-                        value={b}
-                        className="bg-[#120721] text-white"
+                    <Input
+                      label="First Name"
+                      placeholder="e.g. Rahul"
+                      error={errors.first_name?.message}
+                      required
+                      autoComplete="given-name"
+                      {...register("first_name")}
+                    />
+
+                    <Input
+                      label="Last Name"
+                      placeholder="e.g. Sharma"
+                      error={errors.last_name?.message}
+                      autoComplete="family-name"
+                      {...register("last_name")}
+                    />
+
+                  </div>
+
+                  <Input
+                    label="Email Address"
+                    type="email"
+                    placeholder="rahul@example.com"
+                    error={errors.email?.message}
+                    required
+                    autoComplete="email"
+                    {...register("email")}
+                  />
+
+                  <Input
+                    label={settings.usnLabel || "USN / Student ID"}
+                    placeholder={settings.usnHint || "e.g. 4NM22CS001"}
+                    error={errors.usn?.message}
+                    required={settings.usnRequired}
+                    {...register("usn")}
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+                        Branch / Department{" "}
+                        <span className="text-amber-400">*</span>
+                      </label>
+
+                      <select
+                        {...register("branch")}
+                        className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
                       >
-                        {b}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                        {(settings.branches || EVENT_CONFIG.branches).map((b) => (
+                          <option
+                            key={b}
+                            value={b}
+                            className="bg-[#120721] text-white"
+                          >
+                            {b}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
-                    Academic Year{" "}
-                    <span className="text-amber-400">*</span>
-                  </label>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-1.5">
+                        Academic Year{" "}
+                        <span className="text-amber-400">*</span>
+                      </label>
 
-                  <select
-                    {...register("year")}
-                    className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  >
-                    {EVENT_CONFIG.years.map((y) => (
-                      <option
-                        key={y}
-                        value={y}
-                        className="bg-[#120721] text-white"
+                      <select
+                        {...register("year")}
+                        className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500"
                       >
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                        {EVENT_CONFIG.years.map((y) => (
+                          <option
+                            key={y}
+                            value={y}
+                            className="bg-[#120721] text-white"
+                          >
+                            {y}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                  </div>
+
+                  <Input
+                    label="Phone Number"
+                    type="tel"
+                    placeholder="9876543210"
+                    error={errors.phone?.message}
+                    required
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    maxLength={10}
+                    {...register("phone")}
+                  />
+
+                  <div className="pt-2">
+                    <Button
+                      type="submit"
+                      fullWidth
+                      size="lg"
+                      loading={isSubmitting}
+                      className="py-4 text-base"
+                    >
+                      GET ENTRY PASS
+                      <Ticket className="w-5 h-5 ml-1" />
+                    </Button>
+                  </div>
+
+                  <p className="text-[11px] text-center text-slate-400">
+                    🔒 Official registration for {settings.collegeName}. No registration fee required.
+                  </p>
+
+                </form>
 
               </div>
-
-              <Input
-                label="Phone Number"
-                type="tel"
-                placeholder="9876543210"
-                error={errors.phone?.message}
-                required
-                inputMode="numeric"
-                autoComplete="tel"
-                maxLength={10}
-                {...register("phone")}
-              />
-
-              <div className="pt-2">
-                <Button
-                  type="submit"
-                  fullWidth
-                  size="lg"
-                  loading={isSubmitting}
-                  className="py-4 text-base"
-                >
-                  GET ENTRY PASS
-                  <Ticket className="w-5 h-5 ml-1" />
-                </Button>
-              </div>
-
-              <p className="text-[11px] text-center text-slate-400">
-                🔒 Official registration for {settings.collegeName}. No registration fee required.
-              </p>
-
-            </form>
-
-          </div>
+            </>
+          )}
 
           {/* View Existing Pass */}
           <div className="bg-[#100820] border border-[#2e1457] rounded-3xl p-5 space-y-3">

@@ -62,6 +62,13 @@ export async function POST(request: NextRequest) {
 
         const settings = await getEventSettingsServer();
 
+        if (settings.registrationClosed) {
+            return NextResponse.json(
+                { error: "Registration is closed. See you on 12th September!" },
+                { status: 403 }
+            );
+        }
+
         const registrationSchema = buildRegistrationSchema(settings);
 
         const body = await request.json();

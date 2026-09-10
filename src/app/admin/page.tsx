@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
     Users, CheckCircle2, Clock, BarChart3, Search, Download,
-    QrCode, LogOut, ChevronRight, SlidersHorizontal, RefreshCw, Ticket, Settings
+    QrCode, LogOut, ChevronRight, SlidersHorizontal, RefreshCw, Ticket, Settings, Lock, Unlock
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Attendee } from "@/types/database";
@@ -32,6 +32,38 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [exporting, setExporting] = useState(false);
     const [userRole, setUserRole] = useState<"admin" | "volunteer" | null>("admin");
+    const [regClosed, setRegClosed] = useState<boolean>(settings.registrationClosed);
+    const [togglingReg, setTogglingReg] = useState(false);
+
+    useEffect(() => {
+        setRegClosed(settings.registrationClosed);
+    }, [settings.registrationClosed]);
+
+    const handleToggleRegistration = async () => {
+        const nextState = !regClosed;
+        setTogglingReg(true);
+        try {
+            const getRes = await fetch("/api/admin/event-config");
+            const getJson = await getRes.json();
+            const currentSettings = getJson.settings || settings;
+
+            const res = await fetch("/api/admin/event-config", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ...currentSettings,
+                    registrationClosed: nextState,
+                }),
+            });
+            if (res.ok) {
+                setRegClosed(nextState);
+            }
+        } catch {
+            /* error */
+        } finally {
+            setTogglingReg(false);
+        }
+    };
 
     const fetchData = useCallback(async () => {
         try {
@@ -102,6 +134,24 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                            onClick={handleToggleRegistration}
+                            disabled={togglingReg}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-extrabold text-xs border transition-all ${regClosed
+                                    ? "bg-red-950/90 border-red-700 text-red-300 hover:bg-red-900 shadow-lg shadow-red-950/50"
+                                    : "bg-emerald-950/90 border-emerald-700 text-emerald-300 hover:bg-emerald-900 shadow-lg shadow-emerald-950/50"
+                                }`}
+                            title={regClosed ? "Click to Re-Open Registration" : "Click to Close Registration"}
+                        >
+                            <span className={`w-2 h-2 rounded-full ${regClosed ? "bg-red-400 animate-pulse" : "bg-emerald-400 animate-pulse"}`} />
+                            {regClosed ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                            <span className="hidden sm:inline">
+                                {togglingReg ? "Updating..." : regClosed ? "Registration CLOSED" : "Registration OPEN"}
+                            </span>
+                            <span className="sm:hidden">
+                                {togglingReg ? "..." : regClosed ? "CLOSED" : "OPEN"}
+                            </span>
+                        </button>
                         <Button
                             onClick={() => router.push("/admin/scan")}
                             variant="primary"
@@ -122,6 +172,30 @@ export default function AdminDashboard() {
             </header>
 
             <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+                {regClosed && (
+                    <div className="bg-red-950/70 border-2 border-red-800/80 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-red-900/60 border border-red-700/60 text-red-300 flex items-center justify-center flex-shrink-0 font-bold">
+                                <Lock className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-black text-red-200">Registration is Currently CLOSED</p>
+                                <p className="text-xs text-red-300/80">
+                                    New registrations are blocked. Visitors see "Registration Closed — See you on 12th September!".
+                                </p>
+                            </div>
+                        </div>
+                        <Button
+                            onClick={handleToggleRegistration}
+                            loading={togglingReg}
+                            variant="secondary"
+                            size="sm"
+                            className="border-red-700 text-red-200 hover:bg-red-900/60 flex-shrink-0 font-bold"
+                        >
+                            <Unlock className="w-4 h-4" /> Re-Open Registration
+                        </Button>
+                    </div>
+                )}
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     <StatsCard title="Total Registrations" value={total} icon={<Users className="w-5 h-5" />} color="violet" />
