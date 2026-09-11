@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { CalendarDays, CheckCircle2, Clock, Hash, IdCard, Mail, Phone, User, Ticket } from "lucide-react";
 import { getEventSettingsServer } from "@/lib/event-config";
 import { format } from "date-fns";
-import TieBreakerPollCard from "@/components/TieBreakerPollCard";
+import PollView from "@/components/PollView";
 
 export default async function RegistrationViewPage({
     params,
@@ -40,8 +40,9 @@ export default async function RegistrationViewPage({
         : null;
 
     return (
-        <main className="min-h-screen bg-[#0c0516] text-white flex flex-col items-center justify-center p-4 py-8">
-            <div className="max-w-sm w-full space-y-5">
+        <PollView token={id} attendeeFirstName={attendee.first_name}>
+            <main className="min-h-screen bg-[#0c0516] text-white flex flex-col items-center justify-center p-4 py-8">
+                <div className="max-w-sm w-full space-y-5">
                 <div className="w-full bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl p-6 shadow-2xl space-y-5">
                     {/* Header */}
                     <div className="text-center space-y-1">
@@ -107,11 +108,9 @@ export default async function RegistrationViewPage({
 
                     <p className="text-center text-[11px] text-slate-400 font-medium">{settings.name} · {settings.date}</p>
                 </div>
-
-                {/* Tie Breaker Poll (Only renders for checked-in attendees) */}
-                <TieBreakerPollCard token={id} />
             </div>
-        </main>
+            </main>
+        </PollView>
     );
 }
 

@@ -3,7 +3,7 @@ import { lookupAttendee } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { CheckCircle2, Clock, IdCard, QrCode, Ticket } from "lucide-react";
 import { getEventSettingsServer } from "@/lib/event-config";
-import TieBreakerPollCard from "@/components/TieBreakerPollCard";
+import PollView from "@/components/PollView";
 
 export default async function CheckInInfoPage({
     params,
@@ -33,9 +33,10 @@ export default async function CheckInInfoPage({
     if (!attendee) notFound();
 
     return (
-        <main className="min-h-screen bg-[#0c0516] text-white flex flex-col items-center justify-center p-4 py-8">
-            <div className="max-w-sm w-full space-y-5">
-                <div className="w-full bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl p-6 shadow-2xl text-center space-y-5">
+        <PollView token={token} attendeeFirstName={attendee.first_name}>
+            <main className="min-h-screen bg-[#0c0516] text-white flex flex-col items-center justify-center p-4 py-8">
+                <div className="max-w-sm w-full space-y-5">
+                    <div className="w-full bg-[#150a29] border-2 border-[#3b1a6e] rounded-3xl p-6 shadow-2xl text-center space-y-5">
                     <div className="w-14 h-14 mx-auto bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center text-amber-400">
                         <Ticket className="w-7 h-7" />
                     </div>
@@ -72,11 +73,9 @@ export default async function CheckInInfoPage({
                         Show your QR code to the event volunteer at Sadananda Auditorium for check-in.
                     </p>
                 </div>
-
-                {/* Tie Breaker Poll (Only renders for checked-in attendees) */}
-                <TieBreakerPollCard token={token} />
             </div>
         </main>
+        </PollView>
     );
 }
 
