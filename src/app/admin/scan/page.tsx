@@ -26,6 +26,7 @@ export default function ScannerPage() {
     const [checkingIn, setCheckingIn] = useState(false);
     const [checkInTime, setCheckInTime] = useState<string | null>(null);
     const [autoCheckInMode, setAutoCheckInMode] = useState(false);
+    const autoCheckInModeRef = useRef(false);
     const isProcessing = useRef(false);
 
     const stopCamera = useCallback(async () => {
@@ -104,7 +105,7 @@ export default function ScannerPage() {
         await stopCamera();
 
         try {
-            if (autoCheckInMode) {
+            if (autoCheckInModeRef.current) {
                 await performCheckIn(token);
                 return;
             }
@@ -139,7 +140,7 @@ export default function ScannerPage() {
         } finally {
             isProcessing.current = false;
         }
-    }, [state, autoCheckInMode, stopCamera]); // eslint-disable-line
+    }, [state, stopCamera]);
 
     const startCamera = useCallback(async () => {
         if (!scannerRef.current) return;
@@ -218,7 +219,11 @@ export default function ScannerPage() {
                 </div>
                 {/* Mode toggle */}
                 <button
-                    onClick={() => setAutoCheckInMode(!autoCheckInMode)}
+                    onClick={() => {
+                        const next = !autoCheckInMode;
+                        setAutoCheckInMode(next);
+                        autoCheckInModeRef.current = next;
+                    }}
                     className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300 bg-[#1e0c38] px-3 py-1.5 rounded-full border border-[#3b1a6e] hover:border-amber-500/50 transition-all"
                     title="Toggle auto check-in on scan"
                 >
