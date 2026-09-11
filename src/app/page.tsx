@@ -147,10 +147,10 @@ export default function RegistrationPage() {
   };
 
   const handleViewPass = async () => {
-    const query = phoneInput.trim();
+    const phone = phoneInput.trim().replace(/\D/g, "");
 
-    if (!query) {
-      setPhoneError("Enter your Mobile Number, USN, or Reg ID.");
+    if (phone.length !== 10) {
+      setPhoneError("Enter a valid 10-digit mobile number.");
       phoneRef.current?.focus();
       return;
     }
@@ -162,13 +162,13 @@ export default function RegistrationPage() {
       const res = await fetch("/api/lookup-by-phone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: query, search: query }),
+        body: JSON.stringify({ phone }),
       });
 
       const json = await res.json();
 
       if (!res.ok) {
-        setPhoneError(json.error || "No matching pass found.");
+        setPhoneError(json.error || "No matching registration found for this mobile number.");
         return;
       }
 
@@ -358,7 +358,7 @@ export default function RegistrationPage() {
                     Access Pass & Live Tie Breaker Poll
                   </p>
                   <p className="text-slate-300 text-xs mt-0.5">
-                    Enter your USN, Mobile Number, Registration ID, or Email:
+                    Enter your registered 10-digit mobile number:
                   </p>
                 </div>
 
@@ -366,15 +366,17 @@ export default function RegistrationPage() {
                   <div className="flex-1 relative">
                     <input
                       ref={phoneRef}
-                      type="text"
-                      placeholder="e.g. 4NM22CS001 or 9876543210 or REG-12345"
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="10-digit mobile number"
                       value={phoneInput}
                       onChange={(e) => {
-                        setPhoneInput(e.target.value);
+                        setPhoneInput(e.target.value.replace(/\D/g, ""));
                         setPhoneError(null);
                       }}
                       onKeyDown={(e) => e.key === "Enter" && handleViewPass()}
-                      className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono tracking-wider"
                     />
                   </div>
 
@@ -551,7 +553,7 @@ export default function RegistrationPage() {
               </p>
 
               <p className="text-slate-400 text-xs mt-0.5">
-                Enter your Mobile Number, USN, or Registration ID to view your pass & poll
+                Enter your 10-digit mobile number to view your pass & poll
               </p>
             </div>
 
@@ -559,17 +561,19 @@ export default function RegistrationPage() {
 
               <div className="flex-1 relative">
                 <input
-                  type="text"
-                  placeholder="USN, Mobile No, or Reg ID"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="10-digit mobile number"
                   value={phoneInput}
                   onChange={(e) => {
-                    setPhoneInput(e.target.value);
+                    setPhoneInput(e.target.value.replace(/\D/g, ""));
                     setPhoneError(null);
                   }}
                   onKeyDown={(e) =>
                     e.key === "Enter" && handleViewPass()
                   }
-                  className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono tracking-wider"
                 />
               </div>
 

@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { lookupAttendee } from "@/lib/db";
+import { lookupAttendeeByPhone } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const query = (body.phone || body.query || body.search || "").trim();
+        const phone = (body.phone || "").trim().replace(/\D/g, "");
 
-        if (!query) {
+        if (!phone || phone.length !== 10) {
             return NextResponse.json(
-                { error: "Please enter your USN, phone number, or registration ID." },
+                { error: "Please enter a valid 10-digit mobile number." },
                 { status: 400 }
             );
         }
 
-        const attendee = await lookupAttendee(query);
+        const attendee = await lookupAttendeeByPhone(phone);
 
         if (!attendee) {
             return NextResponse.json(
-                { error: "No matching registration found. Please check your USN, phone number, or Reg ID." },
+                { error: "No registration found for this mobile number." },
                 { status: 404 }
             );
         }
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         });
     } catch {
         return NextResponse.json(
-            { error: "Lookup failed. Please check your details and try again." },
+            { error: "Lookup failed. Please check your mobile number and try again." },
             { status: 500 }
         );
     }
