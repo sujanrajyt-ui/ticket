@@ -565,20 +565,32 @@ export async function getTieBreakerPoll(): Promise<{
 
 export async function createOrUpdateTieBreakerPoll(
     title: string,
-    candidateIds: string[]
+    candidateItems: (string | { id?: string; name: string; usn?: string; branch?: string })[]
 ): Promise<{ success: boolean; poll?: TieBreakerPoll; error?: string }> {
-    if (!candidateIds || candidateIds.length < 2) {
-        return { success: false, error: "Select at least 2 checked-in candidates for the tie breaker." };
+    if (!candidateItems || candidateItems.length < 2) {
+        return { success: false, error: "Provide at least 2 candidates for the tie breaker." };
     }
 
-    // Retrieve all candidates and filter ONLY checked-in attendees
     const { attendees } = await getAttendees("", "checked_in");
-    const validCandidates = candidateIds
-        .map((id) => {
+
+    const validCandidates = candidateItems
+        .map((item, idx) => {
+            if (typeof item === "object" && item.name) {
+                return {
+                    id: item.id || `cand-${idx + 1}-${Date.now()}`,
+                    name: item.name.trim(),
+                    usn: item.usn || "",
+                    branch: item.branch || "N/A",
+                };
+            }
+
+            const str = String(item).trim();
+            // Try lookup among checked-in attendees first
             const found = attendees.find(
-                (a) => a.id === id || a.registration_id === id || a.qr_token === id
+                (a) => a.id === str || a.registration_id === str || a.qr_token === str || a.usn === str
             );
-            if (found && found.checked_in) {
+
+            if (found) {
                 return {
                     id: found.registration_id || found.id,
                     name: `${found.first_name} ${found.last_name}`.trim(),
@@ -586,14 +598,21 @@ export async function createOrUpdateTieBreakerPoll(
                     branch: found.branch || "N/A",
                 };
             }
-            return null;
+
+            // Treat as manual candidate name!
+            return {
+                id: `cand-${idx + 1}-${Date.now()}`,
+                name: str,
+                usn: "",
+                branch: "Tie Breaker Candidate",
+            };
         })
-        .filter(Boolean) as { id: string; name: string; usn: string; branch: string }[];
+        .filter((c) => c.name.length > 0);
 
     if (validCandidates.length < 2) {
         return {
             success: false,
-            error: "Only checked-in attendees can be added as tie breaker candidates. Please ensure selected candidates are checked in.",
+            error: "Please enter or select at least 2 valid candidates for the tie breaker poll.",
         };
     }
 

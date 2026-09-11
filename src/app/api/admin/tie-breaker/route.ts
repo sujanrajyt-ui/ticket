@@ -35,11 +35,13 @@ export async function GET() {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { title, candidateIds } = body;
+        const { title, candidates, candidateItems, candidateIds } = body;
+
+        const itemsToUse = candidates || candidateItems || candidateIds || [];
 
         const result = await createOrUpdateTieBreakerPoll(
             title || "Tie Breaker Voting Poll",
-            candidateIds || []
+            itemsToUse
         );
 
         if (!result.success) {
