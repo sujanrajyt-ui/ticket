@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Calendar, Clock, MapPin, Ticket, ArrowRight, Trophy, Vote, Search, Sparkles
+  Calendar, Clock, MapPin, Ticket, ArrowRight, Trophy, Vote, Sparkles
 } from "lucide-react";
 import { EVENT_CONFIG, compileUSNRegex } from "@/config/event";
 import { useEventConfig } from "@/components/EventConfigProvider";
@@ -354,7 +354,7 @@ export default function RegistrationPage() {
                   Registration Closed — See You On 12th September!
                 </h2>
                 <p className="text-slate-300 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
-                  Registrations for {settings.name} are closed. Registered participants can access their entry ticket pass{activePollTitle && " & live tie breaker voting poll"} below!
+                  Registrations for {settings.name} are closed. Registered participants can {activePollTitle ? "cast their vote in the live tie breaker poll" : "access their entry ticket pass"} below!
                 </p>
               </div>
 
@@ -363,10 +363,12 @@ export default function RegistrationPage() {
                 <div className="text-center sm:text-left">
                   <p className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center justify-center sm:justify-start gap-1.5">
                     <Vote className="w-4 h-4 text-amber-400" />
-                    Access Pass{activePollTitle && " & Live Tie Breaker Poll"}
+                    {activePollTitle ? "Vote in the Live Tie Breaker Poll" : "Access Pass"}
                   </p>
                   <p className="text-slate-300 text-xs mt-0.5">
-                    Enter your registered 10-digit mobile number:
+                    {activePollTitle
+                      ? "Enter your registered 10-digit mobile number to cast your vote:"
+                      : "Enter your registered 10-digit mobile number:"}
                   </p>
                 </div>
 
@@ -393,7 +395,7 @@ export default function RegistrationPage() {
                     disabled={phoneLoading}
                     className="bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-slate-950 font-black text-xs rounded-xl px-5 py-3 transition-colors flex items-center justify-center gap-1.5 shadow-lg"
                   >
-                    {phoneLoading ? "Searching..." : activePollTitle ? "View Pass & Poll ➔" : "View Pass ➔"}
+                    {phoneLoading ? "Searching..." : activePollTitle ? "Vote Now ➔" : "View Pass ➔"}
                   </button>
                 </div>
 
@@ -552,16 +554,18 @@ export default function RegistrationPage() {
             </>
           )}
 
-          {/* View Existing Pass */}
+          {/* View Existing Pass / Vote */}
           <div className="bg-[#100820] border border-[#2e1457] rounded-3xl p-5 space-y-3">
 
             <div className="text-center">
               <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                Already Registered?
+                {activePollTitle ? "VOTE IN THE TIE BREAKER POLL" : "Already Registered?"}
               </p>
 
               <p className="text-slate-400 text-xs mt-0.5">
-                Enter your 10-digit mobile number to view your {activePollTitle ? "pass & poll" : "pass"}
+                {activePollTitle
+                  ? "Enter your 10-digit mobile number to cast your vote"
+                  : "Enter your 10-digit mobile number to view your pass"}
               </p>
             </div>
 
@@ -590,7 +594,7 @@ export default function RegistrationPage() {
                 disabled={phoneLoading}
                 className="flex-shrink-0 bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-slate-950 font-extrabold text-xs rounded-xl px-4 py-2.5 transition-colors"
               >
-                {phoneLoading ? "…" : "View Pass"}
+                {phoneLoading ? "…" : activePollTitle ? "Vote Now" : "View Pass"}
               </button>
 
             </div>
