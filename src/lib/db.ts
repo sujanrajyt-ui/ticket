@@ -188,12 +188,15 @@ export async function lookupAttendee(rawQuery: string): Promise<Attendee | null>
 
     const cleanSearch = search.toLowerCase();
 
+    const phoneDigits = search.replace(/\D/g, "");
     const mockMatch = mockAttendees.find(
         (a) =>
             a.qr_token.toLowerCase() === cleanSearch ||
             a.registration_id.toLowerCase() === cleanSearch ||
             (a.usn && a.usn.toLowerCase() === cleanSearch) ||
-            a.id.toLowerCase() === cleanSearch
+            a.id.toLowerCase() === cleanSearch ||
+            (a.email && a.email.toLowerCase() === cleanSearch) ||
+            (phoneDigits.length >= 10 && a.phone === phoneDigits)
     );
     if (mockMatch) return mockMatch;
 
@@ -229,7 +232,29 @@ export async function lookupAttendee(rawQuery: string): Promise<Attendee | null>
 
         if (byUsn) return byUsn as unknown as Attendee;
 
-        // 4. Try UUID id if valid format
+        // 4. Try Phone (if contains 10 digits)
+        if (phoneDigits.length === 10) {
+            const { data: byPhone } = await supabase
+                .from("attendees")
+                .select("*")
+                .eq("phone", phoneDigits)
+                .maybeSingle();
+
+            if (byPhone) return byPhone as unknown as Attendee;
+        }
+
+        // 5. Try Email
+        if (search.includes("@")) {
+            const { data: byEmail } = await supabase
+                .from("attendees")
+                .select("*")
+                .ilike("email", search)
+                .maybeSingle();
+
+            if (byEmail) return byEmail as unknown as Attendee;
+        }
+
+        // 6. Try UUID id if valid format
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(search);
         if (isUuid || search.startsWith("mock-")) {
             const { data: byId } = await supabase

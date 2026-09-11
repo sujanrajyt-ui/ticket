@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Calendar, Clock, MapPin, Ticket, ArrowRight
+  Calendar, Clock, MapPin, Ticket, ArrowRight, Trophy, Vote, Search, Sparkles
 } from "lucide-react";
 import { EVENT_CONFIG, compileUSNRegex } from "@/config/event";
 import { useEventConfig } from "@/components/EventConfigProvider";
@@ -34,6 +34,27 @@ export default function RegistrationPage() {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [phoneLoading, setPhoneLoading] = useState(false);
   const phoneRef = useRef<HTMLInputElement>(null);
+
+  const [savedToken, setSavedToken] = useState<string | null>(null);
+  const [activePollTitle, setActivePollTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check localStorage for previously accessed pass
+    try {
+      const stored = localStorage.getItem("attendee_qr_token");
+      if (stored) setSavedToken(stored);
+    } catch { /* ignored */ }
+
+    // Check if tie breaker poll is currently active
+    fetch("/api/admin/tie-breaker")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.poll?.status === "active") {
+          setActivePollTitle(data.poll.title || "Live Tie Breaker Poll");
+        }
+      })
+      .catch(() => { /* ignored */ });
+  }, []);
 
   const schema = useMemo(() => {
     const usnRegex = compileUSNRegex(settings.usnRegex);
@@ -109,6 +130,10 @@ export default function RegistrationPage() {
         return;
       }
 
+      try {
+        localStorage.setItem("attendee_qr_token", json.qr_token);
+      } catch { /* ignored */ }
+
       router.push(`/success/${json.qr_token}`);
     } catch {
       setServerError("Network error. Please check your connection and try again.");
@@ -122,10 +147,10 @@ export default function RegistrationPage() {
   };
 
   const handleViewPass = async () => {
-    const phone = phoneInput.trim().replace(/\D/g, "");
+    const query = phoneInput.trim();
 
-    if (phone.length !== 10) {
-      setPhoneError("Enter a valid 10-digit mobile number.");
+    if (!query) {
+      setPhoneError("Enter your Mobile Number, USN, or Reg ID.");
       phoneRef.current?.focus();
       return;
     }
@@ -137,15 +162,19 @@ export default function RegistrationPage() {
       const res = await fetch("/api/lookup-by-phone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone: query, search: query }),
       });
 
       const json = await res.json();
 
       if (!res.ok) {
-        setPhoneError(json.error || "Not found.");
+        setPhoneError(json.error || "No matching pass found.");
         return;
       }
+
+      try {
+        localStorage.setItem("attendee_qr_token", json.qr_token);
+      } catch { /* ignored */ }
 
       router.push(`/success/${json.qr_token}`);
     } catch {
@@ -157,6 +186,39 @@ export default function RegistrationPage() {
 
   return (
     <div className="min-h-screen bg-[#0c0516] text-slate-100 selection:bg-amber-500 selection:text-black">
+
+      {/* TOP LIVE POLL BANNER (If Active) */}
+      {activePollTitle && (
+        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950 px-4 py-2.5 text-center font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer hover:bg-amber-400 transition-colors"
+          onClick={() => {
+            if (savedToken) {
+              router.push(`/success/${savedToken}`);
+            } else {
+              scrollToRegister();
+              phoneRef.current?.focus();
+            }
+          }}
+        >
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-950 animate-ping" />
+          <Trophy className="w-4 h-4 fill-slate-950" />
+          <span>⚡ LIVE TIE BREAKER POLL: {activePollTitle} — Tap to vote!</span>
+          <ArrowRight className="w-4 h-4" />
+        </div>
+      )}
+
+      {/* REMEMBERED PASS BANNER */}
+      {savedToken && !activePollTitle && (
+        <div className="bg-[#1f0b40] border-b border-purple-800 text-amber-300 px-4 py-2 text-center text-xs font-bold flex items-center justify-center gap-2">
+          <Sparkles className="w-4 h-4 text-amber-400" />
+          <span>Quick Access: Return to your saved entry ticket pass</span>
+          <button
+            onClick={() => router.push(`/success/${savedToken}`)}
+            className="underline font-black text-white hover:text-amber-400 ml-1"
+          >
+            View My Pass ➔
+          </button>
+        </div>
+      )}
 
       {/* HERO SECTION */}
       <section className="relative pt-8 pb-16 px-4 overflow-hidden">
@@ -284,8 +346,52 @@ export default function RegistrationPage() {
                   Registration Closed — See You On 12th September!
                 </h2>
                 <p className="text-slate-300 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
-                  Registrations for {settings.name} are currently closed. We look forward to seeing all registered participants at the event!
+                  Registrations for {settings.name} are closed. Registered participants can access their entry ticket pass & live tie breaker voting poll below!
                 </p>
+              </div>
+
+              {/* Direct Lookup Box inside Announcement Card */}
+              <div className="bg-[#100820] border border-[#2e1457] rounded-2xl p-4 sm:p-5 text-left space-y-3">
+                <div className="text-center sm:text-left">
+                  <p className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center justify-center sm:justify-start gap-1.5">
+                    <Vote className="w-4 h-4 text-amber-400" />
+                    Access Pass & Live Tie Breaker Poll
+                  </p>
+                  <p className="text-slate-300 text-xs mt-0.5">
+                    Enter your USN, Mobile Number, Registration ID, or Email:
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex-1 relative">
+                    <input
+                      ref={phoneRef}
+                      type="text"
+                      placeholder="e.g. 4NM22CS001 or 9876543210 or REG-12345"
+                      value={phoneInput}
+                      onChange={(e) => {
+                        setPhoneInput(e.target.value);
+                        setPhoneError(null);
+                      }}
+                      onKeyDown={(e) => e.key === "Enter" && handleViewPass()}
+                      className="w-full bg-[#120721] border border-[#2b144e] rounded-xl px-3.5 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleViewPass}
+                    disabled={phoneLoading}
+                    className="bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-slate-950 font-black text-xs rounded-xl px-5 py-3 transition-colors flex items-center justify-center gap-1.5 shadow-lg"
+                  >
+                    {phoneLoading ? "Searching..." : "View Pass & Poll ➔"}
+                  </button>
+                </div>
+
+                {phoneError && (
+                  <p className="text-red-400 text-xs font-semibold text-center sm:text-left">
+                    {phoneError}
+                  </p>
+                )}
               </div>
             </div>
           ) : (
@@ -445,7 +551,7 @@ export default function RegistrationPage() {
               </p>
 
               <p className="text-slate-400 text-xs mt-0.5">
-                Enter your mobile number to view your existing pass
+                Enter your Mobile Number, USN, or Registration ID to view your pass & poll
               </p>
             </div>
 
@@ -453,16 +559,11 @@ export default function RegistrationPage() {
 
               <div className="flex-1 relative">
                 <input
-                  ref={phoneRef}
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength={10}
-                  placeholder="10-digit mobile number"
+                  type="text"
+                  placeholder="USN, Mobile No, or Reg ID"
                   value={phoneInput}
                   onChange={(e) => {
-                    setPhoneInput(
-                      e.target.value.replace(/\D/g, "")
-                    );
+                    setPhoneInput(e.target.value);
                     setPhoneError(null);
                   }}
                   onKeyDown={(e) =>

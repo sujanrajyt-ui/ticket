@@ -35,6 +35,10 @@ export default function SuccessPage() {
 
         (async () => {
             const token = params.token;
+            try {
+                localStorage.setItem("attendee_qr_token", token);
+            } catch { /* ignore */ }
+
             const stored = sessionStorage.getItem(`reg_${token}`);
             let storedData: AttendeeInfo | null = null;
             if (stored) {
