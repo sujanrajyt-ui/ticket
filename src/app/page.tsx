@@ -27,7 +27,7 @@ type FormData = {
 
 export default function RegistrationPage() {
   const router = useRouter();
-  const { settings } = useEventConfig();
+  const { settings, loading: configLoading } = useEventConfig();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
@@ -333,7 +333,15 @@ export default function RegistrationPage() {
       >
         <div className="max-w-xl mx-auto space-y-6">
 
-          {settings.registrationClosed ? (
+          {configLoading ? (
+            /* Skeleton shown while event config loads — prevents flash of registration form */
+            <div className="bg-[#150a29] border border-[#2e1457] rounded-3xl p-8 sm:p-12 flex items-center justify-center min-h-[200px]">
+              <div className="flex flex-col items-center gap-3 text-slate-500">
+                <span className="w-8 h-8 rounded-full border-2 border-amber-500/30 border-t-amber-400 animate-spin" />
+                <p className="text-xs font-semibold tracking-wide">Loading event info...</p>
+              </div>
+            </div>
+          ) : settings.registrationClosed ? (
             <div className="bg-[#150a29] border-2 border-amber-500/50 rounded-3xl p-6 sm:p-10 shadow-2xl text-center space-y-6">
               <div className="w-16 h-16 rounded-full bg-amber-500/10 border-2 border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-3xl">
                 🎭
