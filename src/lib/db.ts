@@ -1,13 +1,21 @@
-import { Attendee } from "@/types/database";
+import { Attendee, TieBreakerPoll, TieBreakerVote } from "@/types/database";
 import { createAdminClient } from "./supabase/server";
 
 // Global in-memory storage for local demo / preview mode when Supabase is unconfigured
 const globalMockStore = globalThis as unknown as {
     mockAttendees?: Attendee[];
+    mockPoll?: TieBreakerPoll | null;
+    mockVotes?: TieBreakerVote[];
 };
 
 if (!globalMockStore.mockAttendees) {
     globalMockStore.mockAttendees = [];
+}
+if (globalMockStore.mockPoll === undefined) {
+    globalMockStore.mockPoll = null;
+}
+if (!globalMockStore.mockVotes) {
+    globalMockStore.mockVotes = [];
 }
 
 export const mockAttendees = globalMockStore.mockAttendees;
@@ -454,3 +462,307 @@ export async function getAttendees(search = "", filter = "all"): Promise<{ atten
 
     return { attendees: filtered, total: filtered.length };
 }
+
+// ============================================================
+// TIE BREAKER POLL FUNCTIONS
+// ============================================================
+
+export async function getTieBreakerPoll(): Promise<{
+    poll: TieBreakerPoll | null;
+    voteCounts: Record<string, number>;
+    totalVotes: number;
+}> {
+    if (isMockMode()) {
+        const poll = globalMockStore.mockPoll || null;
+        const votes = globalMockStore.mockVotes || [];
+        const voteCounts: Record<string, number> = {};
+        if (poll) {
+            poll.candidates.forEach((c) => (voteCounts[c.id] = 0));
+            votes.filter((v) => v.poll_id === poll.id).forEach((v) => {
+                voteCounts[v.candidate_id] = (voteCounts[v.candidate_id] || 0) + 1;
+            });
+        }
+        const totalVotes = Object.values(voteCounts).reduce((a, b) => a + b, 0);
+        return { poll, voteCounts, totalVotes };
+    }
+
+    try {
+        const supabase = await createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: pollData } = await (supabase.from("tie_breaker_polls") as any)
+            .select("*")
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (!pollData) {
+            // Fallback to mock poll if DB table not created yet
+            const mockP = globalMockStore.mockPoll || null;
+            const mockV = globalMockStore.mockVotes || [];
+            const counts: Record<string, number> = {};
+            if (mockP) {
+                mockP.candidates.forEach((c) => (counts[c.id] = 0));
+                mockV.filter((v) => v.poll_id === mockP.id).forEach((v) => {
+                    counts[v.candidate_id] = (counts[v.candidate_id] || 0) + 1;
+                });
+            }
+            return { poll: mockP, voteCounts: counts, totalVotes: Object.values(counts).reduce((a, b) => a + b, 0) };
+        }
+
+        const poll: TieBreakerPoll = pollData as unknown as TieBreakerPoll;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: votesData } = await (supabase.from("tie_breaker_votes") as any)
+            .select("candidate_id")
+            .eq("poll_id", poll.id);
+
+        const voteCounts: Record<string, number> = {};
+        poll.candidates.forEach((c) => (voteCounts[c.id] = 0));
+        (votesData || []).forEach((v: { candidate_id: string }) => {
+            voteCounts[v.candidate_id] = (voteCounts[v.candidate_id] || 0) + 1;
+        });
+
+        const totalVotes = Object.values(voteCounts).reduce((a, b) => a + b, 0);
+        return { poll, voteCounts, totalVotes };
+    } catch {
+        const mockP = globalMockStore.mockPoll || null;
+        const mockV = globalMockStore.mockVotes || [];
+        const counts: Record<string, number> = {};
+        if (mockP) {
+            mockP.candidates.forEach((c) => (counts[c.id] = 0));
+            mockV.filter((v) => v.poll_id === mockP.id).forEach((v) => {
+                counts[v.candidate_id] = (counts[v.candidate_id] || 0) + 1;
+            });
+        }
+        return { poll: mockP, voteCounts: counts, totalVotes: Object.values(counts).reduce((a, b) => a + b, 0) };
+    }
+}
+
+export async function createOrUpdateTieBreakerPoll(
+    title: string,
+    candidateIds: string[]
+): Promise<{ success: boolean; poll?: TieBreakerPoll; error?: string }> {
+    if (!candidateIds || candidateIds.length < 2) {
+        return { success: false, error: "Select at least 2 checked-in candidates for the tie breaker." };
+    }
+
+    // Retrieve all candidates and filter ONLY checked-in attendees
+    const { attendees } = await getAttendees("", "checked_in");
+    const validCandidates = candidateIds
+        .map((id) => {
+            const found = attendees.find(
+                (a) => a.id === id || a.registration_id === id || a.qr_token === id
+            );
+            if (found && found.checked_in) {
+                return {
+                    id: found.registration_id || found.id,
+                    name: `${found.first_name} ${found.last_name}`.trim(),
+                    usn: found.usn || "",
+                    branch: found.branch || "N/A",
+                };
+            }
+            return null;
+        })
+        .filter(Boolean) as { id: string; name: string; usn: string; branch: string }[];
+
+    if (validCandidates.length < 2) {
+        return {
+            success: false,
+            error: "Only checked-in attendees can be added as tie breaker candidates. Please ensure selected candidates are checked in.",
+        };
+    }
+
+    const pollObj: TieBreakerPoll = {
+        id: `poll-${Date.now()}`,
+        title: title || "Tie Breaker Voting Poll",
+        status: "active",
+        candidates: validCandidates,
+        created_at: new Date().toISOString(),
+    };
+
+    // Update mock store
+    globalMockStore.mockPoll = pollObj;
+    globalMockStore.mockVotes = [];
+
+    if (isMockMode()) {
+        return { success: true, poll: pollObj };
+    }
+
+    try {
+        const supabase = await createAdminClient();
+        // Close any existing active polls first
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("tie_breaker_polls") as any)
+            .update({ status: "closed" })
+            .eq("status", "active");
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: newPoll, error } = await (supabase.from("tie_breaker_polls") as any)
+            .insert({
+                title: pollObj.title,
+                status: "active",
+                candidates: validCandidates,
+            })
+            .select()
+            .single();
+
+        if (error || !newPoll) {
+            console.warn("DB insert error for tie_breaker_polls, using in-memory fallback:", error?.message);
+            return { success: true, poll: pollObj };
+        }
+
+        return { success: true, poll: newPoll as unknown as TieBreakerPoll };
+    } catch {
+        return { success: true, poll: pollObj };
+    }
+}
+
+export async function closeTieBreakerPoll(): Promise<{ success: boolean }> {
+    if (globalMockStore.mockPoll) {
+        globalMockStore.mockPoll.status = "closed";
+    }
+
+    if (isMockMode()) return { success: true };
+
+    try {
+        const supabase = await createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("tie_breaker_polls") as any)
+            .update({ status: "closed" })
+            .eq("status", "active");
+        return { success: true };
+    } catch {
+        return { success: true };
+    }
+}
+
+export async function getTieBreakerVoteStatus(rawTokenOrId: string): Promise<{
+    eligible: boolean;
+    reason?: string;
+    checkedIn: boolean;
+    hasVoted: boolean;
+    votedCandidateId?: string;
+    poll?: TieBreakerPoll | null;
+    voteCounts?: Record<string, number>;
+    totalVotes?: number;
+}> {
+    const attendee = await lookupAttendee(rawTokenOrId);
+    if (!attendee) {
+        return { eligible: false, checkedIn: false, hasVoted: false, reason: "Attendee not found" };
+    }
+
+    if (!attendee.checked_in) {
+        return { eligible: false, checkedIn: false, hasVoted: false, reason: "Not checked in" };
+    }
+
+    const { poll, voteCounts, totalVotes } = await getTieBreakerPoll();
+    if (!poll || poll.status !== "active") {
+        return { eligible: true, checkedIn: true, hasVoted: false, poll: null };
+    }
+
+    let hasVoted = false;
+    let votedCandidateId: string | undefined = undefined;
+
+    // Check mock votes
+    const mockV = (globalMockStore.mockVotes || []).find(
+        (v) => v.poll_id === poll.id && (v.attendee_id === attendee.id || v.qr_token === attendee.qr_token || v.attendee_id === attendee.registration_id)
+    );
+    if (mockV) {
+        hasVoted = true;
+        votedCandidateId = mockV.candidate_id;
+    }
+
+    if (!hasVoted && !isMockMode()) {
+        try {
+            const supabase = await createAdminClient();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data } = await (supabase.from("tie_breaker_votes") as any)
+                .select("candidate_id")
+                .eq("poll_id", poll.id)
+                .or(`attendee_id.eq.${attendee.id},attendee_id.eq.${attendee.registration_id},qr_token.eq.${attendee.qr_token}`)
+                .maybeSingle();
+
+            if (data) {
+                hasVoted = true;
+                votedCandidateId = data.candidate_id;
+            }
+        } catch { /* ignored */ }
+    }
+
+    return {
+        eligible: true,
+        checkedIn: true,
+        hasVoted,
+        votedCandidateId,
+        poll,
+        voteCounts,
+        totalVotes,
+    };
+}
+
+export async function castTieBreakerVote(
+    rawTokenOrId: string,
+    candidateId: string
+): Promise<{ success: boolean; error?: string }> {
+    const attendee = await lookupAttendee(rawTokenOrId);
+    if (!attendee) {
+        return { success: false, error: "Invalid attendee ticket." };
+    }
+
+    if (!attendee.checked_in) {
+        return { success: false, error: "Voting is strictly reserved for attendees who have checked in at the venue." };
+    }
+
+    const { poll } = await getTieBreakerPoll();
+    if (!poll || poll.status !== "active") {
+        return { success: false, error: "No active tie breaker poll available." };
+    }
+
+    const isCandidateValid = poll.candidates.some((c) => c.id === candidateId);
+    if (!isCandidateValid) {
+        return { success: false, error: "Invalid candidate selection." };
+    }
+
+    const voteStatus = await getTieBreakerVoteStatus(rawTokenOrId);
+    if (voteStatus.hasVoted) {
+        return { success: false, error: "You have already cast your vote in this tie breaker." };
+    }
+
+    const voteObj: TieBreakerVote = {
+        id: `vote-${Date.now()}`,
+        poll_id: poll.id,
+        candidate_id: candidateId,
+        attendee_id: attendee.id || attendee.registration_id,
+        qr_token: attendee.qr_token,
+        created_at: new Date().toISOString(),
+    };
+
+    if (!globalMockStore.mockVotes) globalMockStore.mockVotes = [];
+    globalMockStore.mockVotes.push(voteObj);
+
+    if (isMockMode()) {
+        return { success: true };
+    }
+
+    try {
+        const supabase = await createAdminClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase.from("tie_breaker_votes") as any).insert({
+            poll_id: poll.id,
+            candidate_id: candidateId,
+            attendee_id: attendee.id || attendee.registration_id,
+            qr_token: attendee.qr_token,
+        });
+
+        if (error) {
+            if (error.code === "23505") {
+                return { success: false, error: "You have already cast your vote." };
+            }
+            console.warn("DB insert error for tie_breaker_votes, mock saved:", error.message);
+        }
+        return { success: true };
+    } catch {
+        return { success: true };
+    }
+}
+

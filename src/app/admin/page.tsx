@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
     Users, CheckCircle2, Clock, BarChart3, Search, Download,
-    QrCode, LogOut, ChevronRight, SlidersHorizontal, RefreshCw, Ticket, Settings, Lock, Unlock
+    QrCode, LogOut, ChevronRight, SlidersHorizontal, RefreshCw, Ticket, Settings, Lock, Unlock, Trophy
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Attendee } from "@/types/database";
@@ -12,6 +12,7 @@ import { useEventConfig } from "@/components/EventConfigProvider";
 import StatsCard from "@/components/admin/StatsCard";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import TieBreakerModal from "@/components/admin/TieBreakerModal";
 
 const FILTERS = ["all", "not_checked_in", "checked_in"] as const;
 type Filter = (typeof FILTERS)[number];
@@ -34,6 +35,7 @@ export default function AdminDashboard() {
     const [userRole, setUserRole] = useState<"admin" | "volunteer" | null>("admin");
     const [regClosed, setRegClosed] = useState<boolean>(settings.registrationClosed);
     const [togglingReg, setTogglingReg] = useState(false);
+    const [isTieBreakerOpen, setIsTieBreakerOpen] = useState(false);
 
     useEffect(() => {
         setRegClosed(settings.registrationClosed);
@@ -138,8 +140,8 @@ export default function AdminDashboard() {
                             onClick={handleToggleRegistration}
                             disabled={togglingReg}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-extrabold text-xs border transition-all ${regClosed
-                                    ? "bg-red-950/90 border-red-700 text-red-300 hover:bg-red-900 shadow-lg shadow-red-950/50"
-                                    : "bg-emerald-950/90 border-emerald-700 text-emerald-300 hover:bg-emerald-900 shadow-lg shadow-emerald-950/50"
+                                ? "bg-red-950/90 border-red-700 text-red-300 hover:bg-red-900 shadow-lg shadow-red-950/50"
+                                : "bg-emerald-950/90 border-emerald-700 text-emerald-300 hover:bg-emerald-900 shadow-lg shadow-emerald-950/50"
                                 }`}
                             title={regClosed ? "Click to Re-Open Registration" : "Click to Close Registration"}
                         >
@@ -152,6 +154,15 @@ export default function AdminDashboard() {
                                 {togglingReg ? "..." : regClosed ? "CLOSED" : "OPEN"}
                             </span>
                         </button>
+                        <Button
+                            onClick={() => setIsTieBreakerOpen(true)}
+                            variant="secondary"
+                            size="sm"
+                            className="font-bold border-amber-500/50 text-amber-300 hover:bg-amber-500/20 shadow-lg shadow-amber-950/40"
+                        >
+                            <Trophy className="w-4 h-4 text-amber-400" />
+                            <span className="hidden sm:inline">Tie Breaker</span>
+                        </Button>
                         <Button
                             onClick={() => router.push("/admin/scan")}
                             variant="primary"
@@ -299,6 +310,10 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </main>
+            <TieBreakerModal
+                isOpen={isTieBreakerOpen}
+                onClose={() => setIsTieBreakerOpen(false)}
+            />
         </div>
     );
 }

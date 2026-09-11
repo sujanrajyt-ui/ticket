@@ -6,6 +6,7 @@ import { Download, Share2, Printer, CheckCircle2, MapPin, Calendar } from "lucid
 import { generateQRDataURL, downloadQRCode } from "@/lib/qr";
 import { useEventConfig } from "@/components/EventConfigProvider";
 import Button from "@/components/ui/Button";
+import TieBreakerPollCard from "@/components/TieBreakerPollCard";
 
 interface AttendeeInfo {
     first_name: string;
@@ -234,6 +235,9 @@ export default function SuccessPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Tie Breaker Voting Poll (Only renders for checked-in attendees) */}
+                <TieBreakerPollCard token={params.token} />
 
                 {/* Actions */}
                 <div className="grid grid-cols-2 gap-3">

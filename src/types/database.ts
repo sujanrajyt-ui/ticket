@@ -33,6 +33,31 @@ export interface EventConfigRow {
     updated_at: string;
 }
 
+export interface TieBreakerCandidate {
+    id: string; // attendee registration_id or id
+    name: string;
+    usn?: string;
+    branch?: string;
+}
+
+export interface TieBreakerPoll {
+    id: string;
+    title: string;
+    status: "active" | "closed";
+    candidates: TieBreakerCandidate[];
+    created_at: string;
+    updated_at?: string;
+}
+
+export interface TieBreakerVote {
+    id: string;
+    poll_id: string;
+    candidate_id: string;
+    attendee_id: string;
+    qr_token: string;
+    created_at: string;
+}
+
 export interface Database {
     public: {
         Tables: {
