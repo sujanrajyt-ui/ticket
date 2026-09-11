@@ -354,7 +354,7 @@ export default function RegistrationPage() {
                   Registration Closed — See You On 12th September!
                 </h2>
                 <p className="text-slate-300 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
-                  Registrations for {settings.name} are closed. Registered participants can access their entry ticket pass & live tie breaker voting poll below!
+                  Registrations for {settings.name} are closed. Registered participants can access their entry ticket pass{activePollTitle && " & live tie breaker voting poll"} below!
                 </p>
               </div>
 
@@ -363,7 +363,7 @@ export default function RegistrationPage() {
                 <div className="text-center sm:text-left">
                   <p className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center justify-center sm:justify-start gap-1.5">
                     <Vote className="w-4 h-4 text-amber-400" />
-                    Access Pass & Live Tie Breaker Poll
+                    Access Pass{activePollTitle && " & Live Tie Breaker Poll"}
                   </p>
                   <p className="text-slate-300 text-xs mt-0.5">
                     Enter your registered 10-digit mobile number:
@@ -393,7 +393,7 @@ export default function RegistrationPage() {
                     disabled={phoneLoading}
                     className="bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-slate-950 font-black text-xs rounded-xl px-5 py-3 transition-colors flex items-center justify-center gap-1.5 shadow-lg"
                   >
-                    {phoneLoading ? "Searching..." : "View Pass & Poll ➔"}
+                    {phoneLoading ? "Searching..." : activePollTitle ? "View Pass & Poll ➔" : "View Pass ➔"}
                   </button>
                 </div>
 
@@ -561,7 +561,7 @@ export default function RegistrationPage() {
               </p>
 
               <p className="text-slate-400 text-xs mt-0.5">
-                Enter your 10-digit mobile number to view your pass & poll
+                Enter your 10-digit mobile number to view your {activePollTitle ? "pass & poll" : "pass"}
               </p>
             </div>
 

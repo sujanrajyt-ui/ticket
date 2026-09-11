@@ -695,11 +695,20 @@ export async function getTieBreakerVoteStatus(rawTokenOrId: string): Promise<{
         return { eligible: false, checkedIn: false, hasVoted: false, reason: "Attendee not found" };
     }
 
+    const { poll, voteCounts, totalVotes } = await getTieBreakerPoll();
+
     if (!attendee.checked_in) {
-        return { eligible: false, checkedIn: false, hasVoted: false, reason: "Not checked in" };
+        return {
+            eligible: false,
+            checkedIn: false,
+            hasVoted: false,
+            reason: "Not checked in",
+            poll,
+            voteCounts,
+            totalVotes,
+        };
     }
 
-    const { poll, voteCounts, totalVotes } = await getTieBreakerPoll();
     if (!poll || poll.status !== "active") {
         return { eligible: true, checkedIn: true, hasVoted: false, poll: null };
     }

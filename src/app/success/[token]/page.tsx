@@ -212,8 +212,8 @@ export default function SuccessPage() {
     const fullName = `${attendee.first_name} ${attendee.last_name}`.trim();
     const { checkedIn, pollActive, pollTitle, candidates, hasVoted, votedCandidateId, voteCounts, totalVotes } = pollState;
 
-    // ── POLL VIEW: checked-in attendee + poll is active ──────────────────────
-    if (checkedIn && pollActive) {
+    // ── POLL VIEW: poll is active — show ONLY the poll, never the pass ───────
+    if (pollActive) {
         return (
             <main className="min-h-screen bg-[#0c0516] text-slate-100 py-8 px-4 sm:py-12">
                 <div className="max-w-md mx-auto space-y-5">
@@ -224,80 +224,93 @@ export default function SuccessPage() {
                             Live Tie Breaker Poll
                         </span>
                         <h1 className="text-lg font-black text-white">{pollTitle}</h1>
-                        <p className="text-xs text-slate-500">Hi {attendee.first_name} — cast your vote below</p>
+                        <p className="text-xs text-slate-500">Hi {attendee.first_name} — {checkedIn ? "cast your vote below" : "please check in at the entrance to vote"}</p>
                     </div>
 
                     {voteError && (
                         <p className="text-xs text-red-400 font-semibold text-center">{voteError}</p>
                     )}
 
-                    {/* Candidates */}
-                    <div className="space-y-2">
-                        {candidates.map((c) => {
-                            const votes = voteCounts[c.id] || 0;
-                            const percent = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
-                            const isSelected = selected === c.id;
-                            const isMyVote = votedCandidateId === c.id;
+                    {!checkedIn ? (
+                        <div className="bg-[#150a29] border border-[#2e1457] rounded-2xl p-5 text-center space-y-3">
+                            <div className="text-2xl">🎟️</div>
+                            <p className="text-sm font-bold text-white">You&apos;re not checked in yet</p>
+                            <p className="text-xs text-slate-400 leading-relaxed">
+                                The live tie breaker poll is open for attendees who have checked in at the venue.
+                                Show your official pass at the entrance and vote once you&apos;re checked in.
+                            </p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Candidates */}
+                            <div className="space-y-2">
+                                {candidates.map((c) => {
+                                    const votes = voteCounts[c.id] || 0;
+                                    const percent = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+                                    const isSelected = selected === c.id;
+                                    const isMyVote = votedCandidateId === c.id;
 
-                            return (
-                                <div
-                                    key={c.id}
-                                    onClick={() => !hasVoted && setSelected(c.id)}
-                                    className={`p-4 rounded-2xl border transition-colors ${hasVoted
-                                            ? isMyVote
-                                                ? "bg-amber-500/10 border-amber-500/50"
-                                                : "bg-[#100720] border-[#28114a]"
-                                            : isSelected
-                                                ? "bg-amber-500/15 border-amber-400 cursor-pointer"
-                                                : "bg-[#100720] border-[#28114a] hover:border-[#421d7c] cursor-pointer"
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-between gap-3">
-                                        <div className="flex items-center gap-2.5 min-w-0">
-                                            {!hasVoted && (
-                                                <div className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center ${isSelected ? "border-amber-400 bg-amber-400" : "border-slate-500"
-                                                    }`}>
-                                                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-slate-950" />}
+                                    return (
+                                        <div
+                                            key={c.id}
+                                            onClick={() => !hasVoted && setSelected(c.id)}
+                                            className={`p-4 rounded-2xl border transition-colors ${hasVoted
+                                                    ? isMyVote
+                                                        ? "bg-amber-500/10 border-amber-500/50"
+                                                        : "bg-[#100720] border-[#28114a]"
+                                                    : isSelected
+                                                        ? "bg-amber-500/15 border-amber-400 cursor-pointer"
+                                                        : "bg-[#100720] border-[#28114a] hover:border-[#421d7c] cursor-pointer"
+                                                }`}
+                                        >
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    {!hasVoted && (
+                                                        <div className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center ${isSelected ? "border-amber-400 bg-amber-400" : "border-slate-500"
+                                                            }`}>
+                                                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-slate-950" />}
+                                                        </div>
+                                                    )}
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-bold text-white truncate">
+                                                            {c.name}
+                                                            {isMyVote && <span className="ml-2 text-[10px] text-amber-400">← your vote</span>}
+                                                        </p>
+                                                        {c.usn && <p className="text-[11px] text-slate-500 font-mono">{c.usn}</p>}
+                                                    </div>
+                                                </div>
+                                                {hasVoted && (
+                                                    <span className="text-sm font-black text-amber-400 flex-shrink-0">{percent}%</span>
+                                                )}
+                                            </div>
+
+                                            {hasVoted && (
+                                                <div className="mt-2.5 h-1.5 bg-[#1c0b38] rounded-full overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all duration-500 ${isMyVote ? "bg-amber-400" : "bg-purple-700"}`}
+                                                        style={{ width: `${percent}%` }}
+                                                    />
                                                 </div>
                                             )}
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-bold text-white truncate">
-                                                    {c.name}
-                                                    {isMyVote && <span className="ml-2 text-[10px] text-amber-400">← your vote</span>}
-                                                </p>
-                                                {c.usn && <p className="text-[11px] text-slate-500 font-mono">{c.usn}</p>}
-                                            </div>
                                         </div>
-                                        {hasVoted && (
-                                            <span className="text-sm font-black text-amber-400 flex-shrink-0">{percent}%</span>
-                                        )}
-                                    </div>
+                                    );
+                                })}
+                            </div>
 
-                                    {hasVoted && (
-                                        <div className="mt-2.5 h-1.5 bg-[#1c0b38] rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full transition-all duration-500 ${isMyVote ? "bg-amber-400" : "bg-purple-700"}`}
-                                                style={{ width: `${percent}%` }}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {!hasVoted ? (
-                        <button
-                            onClick={handleVote}
-                            disabled={!selected || submitting}
-                            className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-black text-sm py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-                        >
-                            {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : "Cast Your Vote"}
-                        </button>
-                    ) : (
-                        <p className="text-center text-xs text-slate-500">
-                            {hasVoted ? "✓ Vote submitted. " : ""}Live results update every 5 seconds.
-                        </p>
+                            {!hasVoted ? (
+                                <button
+                                    onClick={handleVote}
+                                    disabled={!selected || submitting}
+                                    className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-black text-sm py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                                >
+                                    {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : "Cast Your Vote"}
+                                </button>
+                            ) : (
+                                <p className="text-center text-xs text-slate-500">
+                                    {hasVoted ? "✓ Vote submitted. " : ""}Live results update every 5 seconds.
+                                </p>
+                            )}
+                        </>
                     )}
                 </div>
             </main>
