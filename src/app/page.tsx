@@ -45,15 +45,20 @@ export default function RegistrationPage() {
       if (stored) setSavedToken(stored);
     } catch { /* ignored */ }
 
-    // Check if tie breaker poll is currently active
-    fetch("/api/admin/tie-breaker")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.poll?.status === "active") {
-          setActivePollTitle(data.poll.title || "Live Tie Breaker Poll");
-        }
-      })
-      .catch(() => { /* ignored */ });
+    // Check if tie breaker poll is currently active — re-check live every 5s
+    const checkPoll = () => {
+      fetch("/api/admin/tie-breaker")
+        .then((res) => res.json())
+        .then((data) => {
+          const poll = data?.poll;
+          setActivePollTitle(poll?.status === "active" ? poll.title || "Live Tie Breaker Poll" : null);
+        })
+        .catch(() => { /* ignored */ });
+    };
+
+    checkPoll();
+    const iv = setInterval(checkPoll, 5000);
+    return () => clearInterval(iv);
   }, []);
 
   const schema = useMemo(() => {
